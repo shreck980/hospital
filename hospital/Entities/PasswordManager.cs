@@ -7,8 +7,8 @@ namespace hospital.Entities
 
         public static string HashPassword(string password)
         {
-            string salt = BCrypt.Net.BCrypt.GenerateSalt();
-            string hashedPassword = BCrypt.Net.BCrypt.HashPassword(password, salt);
+            //string salt = BCrypt.Net.BCrypt.GenerateSalt();
+            string hashedPassword = BCrypt.Net.BCrypt.HashPassword(password);
 
             return hashedPassword;
         }

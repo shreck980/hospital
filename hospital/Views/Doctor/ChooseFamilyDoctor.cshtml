@@ -1,0 +1,42 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+
+
+   
+
+       
+<div class ="form-container">
+    <h2 class="display-4">Обрати сімейного лікаря</h2>
+
+    @model hospital.Models.BookAppointment
+    @using (Html.BeginForm("BookFirstAppointmentSchedule", "Doctor", FormMethod.Post))
+        {
+
+        @if (ViewBag.Doctors != null)
+        {
+           
+            @Html.DropDownListFor(m => m.Doctor.Id, new SelectList(ViewBag.Doctors,"Id","FullName"), "Оберіть лікаря", new { @class = "form-control" })
+
+            <div class="text-danger">
+                @Html.ValidationMessage("DoctorId")
+            </div>
+        }
+        else
+        {
+            <p>No doctors found</p>
+        }
+
+        @Html.HiddenFor(m => m.ScheduleId)
+        @Html.HiddenFor(m => m.ReasonForAppeal)
+        <button type="submit">Select</button>
+           
+            
+            
+        }
+       
+       
+</div>
+

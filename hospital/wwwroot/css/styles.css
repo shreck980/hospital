@@ -1,0 +1,36 @@
+.body{
+    font-family: 'Cascadia Code';
+}
+
+.account_question,.login {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    
+}
+.button-container{
+   /* margin-top:40px;*/
+    margin-bottom:40px;
+}
+
+.button_default {
+    margin: 5px;
+    padding: 5px 10px;
+    background-color: #8dcfd4;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.button_default {
+    background-color: #add8e6; /* Light blue with a tint */
+}
+.h3{
+    margin-bottom:20px;
+    color:red;
+}
+
+
+

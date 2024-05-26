@@ -1,0 +1,78 @@
+﻿@{
+    ViewData["Title"] = "Personal profile";
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="~/css/styles.css">
+</head>
+<body>
+    @model dynamic
+    @{
+        int state = (int)TempData["State"];
+    }
+    <h3 class="display-4">Вітаємо у вашому персональному акаунті!</h3>
+    <p>@Model.Name @Model.Surname</p>
+
+    <div class="container_p">
+        <div class="menu">
+            <h3>Меню</h3>
+            @if (state == 2)
+            {
+                <a asp-controller="Doctor" asp-action="ChooseFamilyDoctor" class="important">Оберіть сімейного лікаря!</a>
+
+            }
+            else if (state == 4 )
+            {
+                <p class="important">Ви записалися на перший приом до Вашого майбутнього сімейного лікаря. Будь ласка, відвідайте прийом, щоб заключити договір про співпрацю</p>
+            }
+           else{
+               <div style="display:flex;flex-direction:column;">
+                <a asp-controller="Doctor" asp-action="ChooseDoctor">Записатися на прийом до лікаря</a>
+                <a asp-controller="MedicalCard" asp-action="OpenAppointmentHistoryForPatient" >Прийоми</a>
+                </div>
+            }
+
+        </div>
+      
+        <div class="planned_appointments">
+            @if (Model.Appointments.Count > 0)
+            {
+            <h3>Заплановані прийоми</h3>
+            <table id="appointments_table">
+                <thead>
+                    <tr>
+                        <th>Дата</th>
+                        <th>Початок</th>
+                        <th>Лікар</th>
+                        <th>Кімната</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var a in Model.Appointments)
+                    {
+                        <tr>
+                            <td>@a.TimeStart.ToShortDateString()</td>
+                            <td>@a.TimeStart.ToShortTimeString()</td>
+                            <td>@a.Doctor.Name @a.Doctor.Surname</td>
+                            <td>@a.RoomNumber</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            }
+            <p class="text-danger" style="text-align:center; font-size:18px;"> @Html.ValidationMessage("no_schedule")</p>
+            </div>
+        
+
+        
+            
+        
+
+    </div>
+
+
+</body>
+</html>

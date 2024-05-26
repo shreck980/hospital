@@ -1,0 +1,43 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+
+
+<div >
+    @model hospital.Models.BookAppointment
+
+    <div class="title-container">
+        <h3 class="normal-title">Записатися на прийом до лікаря - @Model.Doctor.Name @Model.Doctor.Surname</h3>
+    </div>
+
+    <div class="form-container">
+
+        @using (Html.BeginForm("SaveAppointment", "Appointment", FormMethod.Post))
+        {
+            @Html.ValidationSummary(true)
+           <label>Години прийому</label>
+            @Html.DropDownListFor(m => m.ScheduleId, new List<SelectListItem>(@Model.Schedule), "Оберіть години для прийому", new { @class = "form-control" })
+           
+            @Html.ValidationMessageFor(m => m.ScheduleId, "", new { @class = "text-danger" })
+          
+
+            <label for="reasonForAppeal">Причина звернення:</label>
+        
+            @Html.TextAreaFor(m => m.ReasonForAppeal, new { rows = 4, cols = 40 })
+            
+
+            @Html.ValidationMessageFor(m => m.ReasonForAppeal, "", new { @class = "text-danger" })
+           
+
+            @Html.HiddenFor(m => m.Doctor.Id)
+            @Html.HiddenFor(m => m.Doctor.Email)
+            @Html.HiddenFor(m => m.Schedule)
+
+            <button type="submit">Select</button>
+        }
+
+    </div>
+
+</div>

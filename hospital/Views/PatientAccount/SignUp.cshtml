@@ -1,0 +1,67 @@
+﻿@{
+    ViewData["Title"] = "Sign Up";
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="~/css/styles.css">
+</head>
+<body>
+    @model hospital.Entities.Patient
+    <div class="form-container">
+    @using (Html.BeginForm("CreateUnverified", "PatientAccount", FormMethod.Post))
+    {
+        @Html.ValidationSummary(true)
+
+        <label for="name">Name:</label>
+       
+        @Html.TextBoxFor(m => m.Name)
+       
+        @Html.ValidationMessageFor(m => m.Name, "", new { @class = "text-danger" })
+      
+
+        <label for="surname">Surname:</label>
+       
+        @Html.TextBoxFor(m => m.Surname)
+       
+        @Html.ValidationMessageFor(m => m.Surname, "", new { @class = "text-danger" })
+       
+
+        <label for="email">Email:</label>
+       
+        @Html.TextBoxFor(m => m.Email)
+     
+        @Html.ValidationMessageFor(m => m.Email, "", new { @class = "text-danger" })
+        
+
+        <label for="password">Password:</label>
+       
+        @Html.PasswordFor(m => m.Password)
+     
+        @Html.ValidationMessageFor(m => m.Password, "", new { @class = "text-danger" })
+   
+
+        <label for="birthday">Birthday:</label>
+        
+        @Html.TextBoxFor(m => m.Birthday, new { type = "date" })
+       
+        @Html.ValidationMessageFor(m => m.Birthday, "", new { @class = "text-danger" })
+       
+
+        <label for="address">Address:</label>
+     
+        @Html.TextAreaFor(m => m.Address, new { rows = 4, cols = 50 })
+        
+        @Html.ValidationMessageFor(m => m.Address, "", new { @class = "text-danger" })
+        
+        //@Html.HiddenFor(m => m.State)
+        //@Html.HiddenFor(m => m.FamilyDoctor)
+       // @Html.HiddenFor(m => m.MedicalCard)
+        //@Html.HiddenFor(m => m.IsLogged)
+        <input type="submit" value="Submit">
+    }
+    </div>
+</body>
+</html>

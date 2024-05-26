@@ -1,0 +1,148 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+
+
+@{
+    ViewData["Title"] = "Record Appointment";
+}
+<body onload="window.history.forward();">
+
+<h2 style="text-align:center;">Записати прийом</h2>
+@model hospital.Models.AppointmentRecordModel
+
+<div class="form-container" style="max-width:900px">
+@using (Html.BeginForm("SaveAppointmentRecord", "MedicalCard", FormMethod.Post))
+{
+    <div class="patient-info">
+        <div class="row">
+            <div class="col-md-6">
+                @Html.LabelFor(model => model.Appointment.Patient.Name)
+                    @Html.DisplayFor(model => model.Appointment.Patient.Name) <!-- Display patient name here -->
+            </div>
+            <div class="col-md-6">
+                    @Html.LabelFor(model => model.Appointment.Patient.Surname)
+                    @Html.DisplayFor(model => model.Appointment.Patient.Surname) <!-- Display patient surname here -->
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                    @Html.LabelFor(model => model.Appointment.Patient.Birthday)
+                    @Html.DisplayFor(model => model.Appointment.Patient.Birthday) <!-- Display patient birthday here -->
+            </div>
+            <div class="col-md-6">
+                    @Html.LabelFor(model => model.Appointment.Patient.Email)
+                    @Html.DisplayFor(model => model.Appointment.Patient.Email) <!-- Display patient email here -->
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                    @Html.LabelFor(model => model.Appointment.Patient.FamilyDoctor)
+                    <div style="display:flex;flex-direction:row;">
+                    @Html.DisplayFor(model => model.Appointment.Patient.FamilyDoctor.Name) <!-- Display family doctor here -->
+                    @Html.DisplayFor(model => model.Appointment.Patient.FamilyDoctor.Surname)
+                    </div>
+            </div>
+            
+        </div>
+    </div>
+    <hr>
+        <h4>Інформація про прийом</h4>
+        <div style=" display: flex;justify-content: space-between;">
+
+            <div class ="col-md-6">
+            @Html.LabelFor(model => model.Appointment.TimeStart)
+            @Html.DisplayFor(model => model.Appointment.TimeStart)
+            @Html.LabelFor(model => model.Appointment.Doctor)
+            @Html.DisplayFor(model => model.Appointment.Doctor.Surname)
+            </div>
+            <div class="col-md-6">
+            @Html.LabelFor(model => model.Appointment.ReasonForAppeal)
+            @Html.DisplayFor(model => model.Appointment.ReasonForAppeal)
+            </div>
+
+           
+            
+        </div>
+
+        <hr>
+    <div class="examination-result">
+        @Html.LabelFor(model => model.EHR.ResultOfExamination)
+            @Html.TextAreaFor(model => model.EHR.ResultOfExamination, new { @class = "form-control", rows = "4" })
+    </div>
+            <hr>
+     <div>
+         <p>Направити пацієнта до іншого лікаря</p>
+                @if (ViewBag.Doctors != null)
+                {
+
+                    @Html.DropDownListFor(m => m.EMR.Referral.Doctor.Id, new SelectList(ViewBag.Doctors, "Id", "FullName","Spetiality"), "Оберіть лікаря", new { @class = "form-control" })
+
+                    <div class="text-danger">
+                        @Html.ValidationMessage("DoctorId")
+                    </div>
+                }
+                else
+                {
+                    <p>No doctors found</p>
+                }
+     </div>
+            <hr>
+
+        <div style="display: flex; justify-content: space-between;">
+            <div class="drug-checkboxes">
+                <h4>Drugs</h4>
+                <div class="scrollable">
+                    <div class="row" style="column-count: 3;">
+                        <!-- Display checkboxes for drugs -->
+                        @for (int i = 0; i < Model.EHR.Drugs.Count; i++)
+                        {
+                                <div style="display:block; ">
+                                    <label>
+                                        @Html.CheckBoxFor(model => model.EHR.Drugs[i].IsSelected)
+                                        @Html.DisplayFor(model => model.EHR.Drugs[i].Name)
+                                        @Html.HiddenFor(model => model.EHR.Drugs[i].Id)
+                                    </label>
+                                </div>
+
+                            
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="symptom-checkboxes">
+                <h4>Symptoms</h4>
+                <div class="scrollable">
+                    <div class="row" style="column-count: 2;">
+                        <!-- Display checkboxes for symptoms -->
+                        @for (int i = 0; i < Model.EHR.Symptoms.Count; i++)
+                        {
+
+                            <label style="display: block;">
+                                    @Html.CheckBoxFor(model => model.EHR.Symptoms[i].IsSelected)
+                                    @Html.HiddenFor(model => model.EHR.Symptoms[i].Id)
+                                    @Html.DisplayFor(model => model.EHR.Symptoms[i].Name)
+                                </label>
+                            
+                        }
+                    </div>
+                </div>
+            </div>
+
+        </div>
+      
+       <br>
+        //@Html.HiddenFor(m => m.Appointment)
+        @Html.HiddenFor(m => m.Appointment.Patient.Id)
+        @Html.HiddenFor(m => m.Appointment.Id)
+        @Html.HiddenFor(m => m.Appointment.Doctor.Id)
+       @Html.HiddenFor(m => m.Appointment.Patient.MedicalCard.Id)
+    <button type="submit" class="btn btn-primary">Зберегти</button>
+
+}
+</div>
+</body>
+

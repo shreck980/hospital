@@ -1,0 +1,82 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+
+@{
+    ViewData["Title"] = "Personal profile";
+}
+
+
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="~/css/styles.css">
+   
+</head>
+<body>
+    @model hospital.Entities.Doctor
+    <h3 class="display-4">Вітаємо у вашому персональному акаунті!</h3>
+   
+
+    <div class="container_p">
+        <div class="menu">
+            <h3>Меню</h3>
+              <!--<a asp-controller="Doctor" asp-action="" class="important">Оберіть сімейного лікаря!</a>-->
+        </div>
+
+        <div class="planned_appointments">
+            <h3>Заплановані прийоми</h3>
+             @if(Model.Schedule.Count>0){
+            <table id="appointments_table">
+                <thead>
+                    <tr>
+                        <th>Дія</th>
+                        <th>Дата</th>
+                        <th>Початок</th>
+                        <th>Пацієнт</th>
+                        <th>Приична запису</th>
+                    </tr>
+                </thead>
+                <tbody>
+                   
+                    @foreach (var a in Model.Schedule)
+                    {
+                        if (a.Appointment is not null)
+                        {
+                            <tr>
+                                <td>
+
+                                    @Html.ActionLink("Записати прийом", "RecordAppointmentPrepare", "MedicalCard", new
+                                    {
+                                        userId = @a.Appointment.Patient.Id,
+                                        userState = @a.Appointment.Patient.State,
+                                        appId = Convert.ToInt32(a.Appointment.Id)
+                                    })
+                                   
+                                </td>
+                                <td>@a.Start.ToShortDateString()</td>
+                                <td>@a.Start.ToShortTimeString()</td>
+                                <td>@a.Appointment.Patient.Name @a.Appointment.Patient.Surname</td>
+                                <td>@a.Appointment.ReasonForAppeal</td>
+                            </tr>
+                        }
+                    
+                    }
+                 
+                </tbody>
+            </table>
+            }
+            <br>
+            <div class="text-danger">
+                @Html.ValidationMessage("no_schedule")
+            </div>
+            
+        </div>
+    </div>
+
+</body>
+</html>

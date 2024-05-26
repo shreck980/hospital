@@ -1,0 +1,21 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+
+<div class="text-center">
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+    }
+    @{
+        var specialLink = TempData["SpecialLink"];
+    }
+
+    @if (specialLink is not null)
+    {
+        <a href="@specialLink" class="important"> Повернутися назад</a>
+    }
+
+</div>

@@ -18,5 +18,250 @@ html {
 }
 
 body {
-  margin-bottom: 60px;
+    margin-bottom: 60px;
+    font-family: 'Cascadia Code';
 }
+.container_p {
+    display: flex;
+    justify-content: space-between;
+}
+
+.menu {
+    flex: 0 0 40%; /* adjust width as needed */
+    /*background-color: #f2f2f2;*/
+}
+
+.planned_appointments {
+    flex: 0 0 60%; /* adjust width as needed */
+    /*background-color: #fff;*/
+    /*border: 1px solid #ccc;*/
+}
+
+#appointments_table {
+    width: 100%;
+}
+
+    #appointments_table th, #appointments_table td {
+        padding: 8px;
+        border-bottom: 1px solid #ddd;
+        text-align: left;
+    }
+
+    #appointments_table th {
+        /*background-color: #f2f2f2;*/
+        border-color:dimgray;
+
+
+    }
+
+
+a.important {
+    font-weight: bold;
+    color: red;
+}
+.important {
+    font-weight: bold;
+    color: red;
+    text-align: center; 
+    display: block;
+}
+.links_to_another_users {
+    display: flex;
+    flex-direction:row;
+}
+.another_users_link{
+    margin:20px;
+}
+
+
+.form-container {
+    max-width:400px;
+    margin: 0 auto;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    background-color: #f9f9f9;
+}
+
+    /* Style for form labels */
+    .form-container label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+        color: #333;
+    }
+
+    /* Style for textboxes and other inputs */
+    .form-container input[type="text"],
+    .form-container input[type="email"],
+    .form-container input[type="password"],
+    .form-container input[type="date"],
+    .form-container textarea,
+    .form-container select {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 15px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        box-sizing: border-box;
+        font-size: 14px;
+    }
+
+    /* Style for the submit button */
+    .form-container button[type="submit"], .form-container button[type="button"], .form-container input[type="submit"] {
+        width: 100%;
+        padding: 10px;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+        transition: background-color 0.3s ease;
+    }
+
+        /* Change background color of submit button on hover */
+        .form-container button[type="submit"]:hover, .form-container button[type="button"]:hover, .form-container input[type="submit"]:hover {
+            background-color: #45a049;
+        }
+
+    /* Additional styles for better readability */
+    .form-container input:focus,
+    .form-container textarea:focus,
+    .form-container select:focus {
+        outline: none;
+        border-color: #4CAF50;
+        box-shadow: 0 0 5px rgba(76, 175, 80, 0.5);
+    }
+.button.disabled {
+    background-color: #c0c0c0;
+}
+.text-danger {
+    color: red;
+    font-size: 0.9em;
+    margin-top: -10px;
+    margin-bottom: 10px;
+    display: block;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.4);
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 400px;
+    text-align: center;
+    border-radius: 10px;
+}
+
+.modal button {
+    padding: 10px 20px;
+    margin: 5px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.modal .yes-button {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.modal .no-button {
+    background-color: #f44336;
+    color: white;
+}
+
+.scrollable {
+    overflow-y: scroll;
+    overflow-x:hidden;
+    height:200px;
+}
+
+
+.title-container {
+    text-align: center;
+    margin-bottom: 20px; /* Adjust as needed */
+}
+
+.normal-title {
+    font-size: 24px; /* Adjust the font size as needed */
+    color: #333; /* Normal black color */
+    margin: 0; /* Remove default margin */
+}
+
+
+.appointment-block {
+    border: 1px solid #e5e5e5;
+    padding: 20px;
+    max-width: 1000px;
+    margin: 20px auto;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    border-radius: 5px;
+    display:flex;
+    flex-direction:column;
+    
+}
+
+
+
+.status {
+    font-size: 16px;
+    margin-bottom: 10px;
+}
+
+.details {
+    margin-bottom: 20px;
+    width: 70%;
+    
+}
+
+   
+
+.buttons {
+    display: flex;
+   flex-direction:column;
+    justify-content: space-between;
+    width:30%;
+}
+.button {
+    background-color: #007bff;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    text-decoration: none;
+    text-align: center;
+}
+
+
+.history_area {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    background-color: #f9f9f9;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    height: 700px;
+}
+
+.button.disabled {
+    background-color: #c0c0c0;
+}
+    

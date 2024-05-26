@@ -1,4 +1,6 @@
-﻿namespace hospital.DAO
+﻿using hospital.DAO.MySQL;
+
+namespace hospital.DAO
 {
     public class DAOFactory
     {

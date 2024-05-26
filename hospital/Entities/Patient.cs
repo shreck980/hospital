@@ -1,39 +1,43 @@
-﻿using System.Net;
+﻿using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
+using Microsoft.AspNetCore.Mvc.RazorPages;
+using System.ComponentModel.DataAnnotations;
+using System.Net;
+using System.Runtime.Serialization;
 using System.Xml.Linq;
 
 namespace hospital.Entities
 {
-    public class Patient
+   
+ 
+    public class Patient : Account
     {
-        private static uint lastId;
-        public uint Id { get; set; }
+       
+        
         public string Name { get; set; }
+        [Required(ErrorMessage = "Surname is required")]
         public string Surname { get; set; }
-        public string Email { get; set; }
-        private string _password;
-        public string Password
-        {
-            get { return _password; }
-            set
-            {
-                _password = PasswordManager.HashPassword(value);
-            }
-        }
 
+        [Required(ErrorMessage = "Birthday is required")]
+        [DataType(DataType.Date)]
         public DateTime Birthday { get; set; }
+        [ValidateNever]
         public AccountStates State { get; set; }
+        [ValidateNever]
         public Doctor FamilyDoctor { get; set; }
+        [ValidateNever]
         public MedicalCard MedicalCard { get; set; }
-
+        [Required(ErrorMessage = "Address is required")]
         public string Address { get; set; }
+      
 
         public Patient(uint id, string name, string surname, string email, string password, DateTime birthday, AccountStates state, Doctor familyDoctor, MedicalCard medicalCard, string address)
+            :base(id,email,password)
         {
-            Id = id;
+            
             Name = name;
             Surname = surname;
-            Email = email;
-            _password = PasswordManager.HashPassword(password);
+            
+           
             Birthday = birthday;
             State = state;
             FamilyDoctor = familyDoctor;
@@ -41,12 +45,10 @@ namespace hospital.Entities
             Address = address;
         }
         public Patient(string name, string surname, string email, string password, DateTime birthday, string address)
-        {
-            Id = GenerateId();
+            :base()
+        {     
             Name = name;
             Surname = surname;
-            Email = email;
-            _password = PasswordManager.HashPassword(password);
             Birthday = birthday;
             State = AccountStates.Unverified;
             FamilyDoctor = new Doctor();
@@ -54,18 +56,21 @@ namespace hospital.Entities
             Address = address;
         }
         public Patient()
+            :base()
         {
             Name = "";
             Surname = "";
-            Email = "";
-            _password = "";
             Birthday = DateTime.Today;
             State = AccountStates.Unverified;
             FamilyDoctor = new Doctor();
             MedicalCard = new MedicalCard();
             Address = "";
-            Id = 0;
+         
         }
+
+     
+        
+
 
 
         public override string ToString()
@@ -73,11 +78,7 @@ namespace hospital.Entities
             return $"Name: {Name}, \nSurname: {Surname}, \nEmail: {Email}, \nPassword: {Password}, \nBirthday: {Birthday}, \nState: {State}, \nFamilyDoctor: {FamilyDoctor}, \nMedicalCard: {MedicalCard}";
         }
 
-        private static uint GenerateId()
-        {
-            return ++lastId;
-        }
-
+        
     }
 
     public enum AccountStates
@@ -85,7 +86,9 @@ namespace hospital.Entities
         Unverified = 1,
         Verified,
         Active,
-        Blocked,
+        PreActive,
+        Frozen,
         PreRemoved
+        
     }
 }

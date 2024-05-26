@@ -1,4 +1,4 @@
-﻿namespace hospital.DAO
+﻿namespace hospital.Exceptions
 {
     public class MySQLException : Exception
     {

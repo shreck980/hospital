@@ -1,0 +1,35 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+<body onload="window.history.forward();">
+
+<div>
+    <h3 class="important">Будь ласка завершіть реєстрацію пацієнта!</h3>
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+    }
+    @model hospital.Entities.Patient
+    <p style="text-align:center;">Стати сімейним лікарем пацієнта - @Model.Name @Model.Surname </p>
+
+    <div class="form-container">
+    @using (Html.BeginForm("SaveFamilyDoctorChoice", "Doctor", FormMethod.Post))
+        {
+        <div>
+            <input type="checkbox" id="familyDoctor" name="familyDoctor">
+  
+            <label for="familyDoctor">Згоден стати сімейним лікарем</label>
+        </div>
+
+        <div>
+            <button type="submit">Створити медичну картку</button>
+
+        </div>
+        @Html.HiddenFor(m => m.Id)
+        }
+    </div>
+       
+</div>
+</body>

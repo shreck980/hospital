@@ -1,0 +1,78 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+
+
+@model hospital.Entities.Patient
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Create Medical Card</title>
+    <link rel="stylesheet" href="~/path/to/styles.css"> <!-- Update the path accordingly -->
+</head>
+<h3 class="important">Будь ласка завершіть реєстрацію пацієнта!</h3>
+<body onload="window.history.forward();">
+    <div class="form-container">
+        @using (Html.BeginForm("SaveNewMedicalCard", "MedicalCard", FormMethod.Post, new { name = "medicalCardForm" }))
+        {
+            <div>
+                <label for="Name">Name</label>
+                @Html.TextBoxFor(model => model.Name, new { @readonly = "readonly" })
+            </div>
+            <div>
+                <label for="Surname">Surname</label>
+                @Html.TextBoxFor(model => model.Surname, new { @readonly = "readonly" })
+            </div>
+            <div>
+                <label for="Birthday">Birthday</label>
+                @Html.TextBoxFor(model => model.Birthday, new { @readonly = "readonly" })
+            </div>
+            <div>
+                <label for="Address">Address</label>
+                @Html.TextBoxFor(model => model.Address, new { @readonly = "readonly", size = Model.Address.Length })
+            </div>
+            <div>
+                <label for="Email">Email</label>
+                @Html.TextBoxFor(model => model.Email, new { type = "email", @readonly = "readonly" })
+            </div>
+            @Html.HiddenFor(model=>model.Id)
+            @Html.HiddenFor(model=>model.State)
+            <button type="button" id="submitButton">Створити медичну картку цього пацієнта</button>
+        }
+    
+    <div id="confirmationModal" class="modal">
+        <div class="modal-content">
+            <p>Are you sure you want to create a medical card for this patient?</p>
+            <button type="submit" class="yes-button" id="confirmYes">Yes, create</button>
+            <button class="no-button" id="confirmNo">No, don't create</button>
+        </div>
+    </div>
+</div>
+
+    <script>
+        document.getElementById('submitButton').addEventListener('click', function() {
+            document.getElementById('confirmationModal').style.display = 'block';
+        });
+
+        document.getElementById('confirmNo').addEventListener('click', function() {
+            document.getElementById('confirmationModal').style.display = 'none';
+        });
+
+        document.getElementById('confirmYes').addEventListener('click', function () {
+            document.forms[0].submit();
+
+        });
+
+        // Close the modal if the user clicks outside of the modal content
+        window.onclick = function(event) {
+            var modal = document.getElementById('confirmationModal');
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
+

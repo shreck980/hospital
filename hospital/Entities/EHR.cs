@@ -12,6 +12,13 @@
             Symptoms = symptoms;
             Drugs = drugs;
             ResultOfExamination = results;
+
+        }
+        public EHR()
+        {
+            Symptoms = new List<Symptom>();
+            Drugs = new List<Drug>();
+            ResultOfExamination = "";
         }
     }
 }

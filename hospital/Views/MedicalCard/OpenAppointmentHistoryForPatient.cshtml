@@ -1,0 +1,59 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>@ViewBag.Title</title>
+   
+</head>
+<body>
+  @model hospital.Entities.MedicalCard
+
+  <div class="history_area">
+    @foreach(var r in Model.AppointmentRecord) {
+        <div class="appointment-block">
+            <div>
+                <h3>Прийом у лікаря @r.Key.Doctor.Name @r.Key.Doctor.Surname </h3>
+            </div>
+            <hr>
+            <div style ="display: flex; flex-direction:row;">
+
+                <div class="details">
+                      
+                   <p>Статус: @r.Key.State </p>
+                    <p>Дата: @r.Key.TimeStart.DayOfWeek, @r.Key.TimeStart.ToShortDateString() </p>
+                    <p>Час: @r.Key.TimeStart.ToShortTimeString()</p>
+                     <p>Номер кабінету: @r.Key.RoomNumber</p>
+                   
+                </div>
+
+                <div class="buttons">
+                        @Html.ActionLink("Записатися ще", "BookAppointmentSchedule", "Doctor", new
+                            {
+                                doctorId = r.Key.Doctor.Id,
+
+                            },
+                            new{@class = "button"})
+                        @Html.ActionLink("Деталі", "ShowAppointmentDetails", "MedicalCard", new
+                            {
+                               appointmentId= r.Key.Id,
+
+                            }, new { @class = "button" })
+                        @Html.ActionLink("Відмінити", "CancelAppointment", "Appointment", new
+                            {
+                                appointmentId = r.Key.Id,
+
+                            }, new { @class = "button" })
+                </div>
+            </div>
+        </div>
+    }
+
+    </div>
+</body>
+</html>

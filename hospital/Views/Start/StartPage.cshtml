@@ -1,0 +1,30 @@
+﻿@{
+    ViewData["Title"] = "Start Page";
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="~/css/styles.css">
+</head>
+<body>
+<div class="account_question">
+        <h3>Чи маєте Ви персональний обліковий запис?</h3>
+        <div class="button-container">
+        <a asp-controller="PatientAccount" asp-action="LogIn">
+            <button class="button_default">Так, увійти</button></a>
+        </div>
+        <div class="button-container">
+            <a asp-controller="PatientAccount" asp-action="SignUp">
+                <button class="button_default">Ні, зареєструватися</button></a>
+        </div>
+    
+        <div class="links_to_another_users">
+              <a class="another_users_link" asp-controller="Doctor" asp-action="Login">Я лікар</a>
+
+            <a class="another_users_link"asp-controller ="Reception" asp-action="Login">Я працівник/ця рецепції</a>
+        </div>
+</div>
+</body>
+</html>
