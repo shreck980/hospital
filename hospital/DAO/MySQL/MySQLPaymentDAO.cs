@@ -12,7 +12,7 @@ namespace hospital.DAO.MySQL
             config = dAOConfig;
         }
         private const string SelectPaymentById = "SELECT* FROM payment_info where id = @id";
-        public Payment? GetPaymentById(uint id)
+        public Payment? GetPaymentById(long id)
         {
 
             // using var connection = new MySqlConnection(config.Url);
@@ -29,11 +29,11 @@ namespace hospital.DAO.MySQL
                     while (reader.Read())
                     {
                         p = new Payment();
-                        p.Id = reader.GetUInt32(0);
+                        p.Id = reader.GetInt64(0);
                         p.Price = reader.GetDecimal(1);
                         p.DateIssued = reader.GetDateTime(2);
                         p.DatePaid = reader["date_paid"] == DBNull.Value ? null : reader.GetDateTime(3);
-                        p.Patient.Id = reader.GetUInt32(4);
+                        p.Patient.Id = reader.GetInt64(4);
                         Console.WriteLine(p);
 
                     }

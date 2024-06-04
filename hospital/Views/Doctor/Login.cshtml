@@ -12,7 +12,11 @@
 <body>
     <div class="form-container">
         @model hospital.Entities.Account
-
+         @if (TempData["ErrorMessage"] != null)
+         {
+        <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+         }
+   
 
         @using (Html.BeginForm("CheckAccount", "Doctor", FormMethod.Post))
         {

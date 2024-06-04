@@ -3,7 +3,7 @@
     public class Event
     {
 
-        public uint Id { get; set; }
+        public long Id { get; set; }
         public DateTime Start { get; set; }
         public DateTime End { get; set; }
         public Appointment? Appointment { get; set; }

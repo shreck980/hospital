@@ -1,8 +1,12 @@
-﻿namespace hospital.Entities
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace hospital.Entities
 {
     public class EHR
     {
-        public uint Id { get; set; }
+        public long Id { get; set; }
+        [Display(Name = "Результат обстеження")]
+        [StringLength(500, ErrorMessage = "Результат обстеження не може перевищувати 500 символів.\r\n")]
         public string ResultOfExamination { get; set; }
         public List<Symptom> Symptoms { get; set; }
         public List<Drug> Drugs { get; set; }

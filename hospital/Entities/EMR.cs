@@ -3,7 +3,7 @@
     public class EMR
     {
 
-        public uint Id { get; set; }
+        public long Id { get; set; }
         public Referral Referral {  get; set; }
         public EMR(Referral referral) { 
             this.Referral = referral;

@@ -23,7 +23,7 @@ namespace hospital.Services
             _appointmentDAO = appointmentDAO;
         }
 
-        public void AddAppointment(BookAppointment model, uint? patientId)
+        public long AddAppointment(BookAppointment model, long? patientId)
         {
             try
             {
@@ -40,23 +40,21 @@ namespace hospital.Services
               
                 a.ReasonForAppeal = model.ReasonForAppeal == null ? "" : model.ReasonForAppeal;
                 Random random = new Random();
-                a.RoomNumber = (uint)random.Next(1, 50);
-                if(a.Doctor.Speciality==Speciality.Dentist || a.Doctor.Speciality == Speciality.Ophthalmologist || a.Doctor.Speciality == Speciality.Gynecologist)
+                a.RoomNumber = (long)random.Next(1, 50);
+                a.Payment = null;
+                if (model.ReferralId.HasValue)
                 {
-                    a.Payment = new Payment();
-                    a.Payment.Patient = a.Patient;
-                    a.Payment.DateIssued = a.TimeStart;
+                    a.State = AppointmentState.PlannedByReferral;
                 }
                 else
                 {
-                    a.Payment = null;
+                    a.State = AppointmentState.Planned;
                 }
-                
-                a.State = AppointmentState.Planned;
                
                 
                 _appointmentDAO.AddApppointment(a);
                 _scheduleDAO.MarkEventAsBooked(s.Id, a.Id);
+                return a.Id;
                
             }
             catch (MySQLException e)
@@ -65,7 +63,7 @@ namespace hospital.Services
             }
         }
 
-        public List<Appointment> GetPatientAppointmentList(uint id)
+        public List<Appointment> GetPatientAppointmentList(long id)
         {
             try
             {
@@ -83,7 +81,7 @@ namespace hospital.Services
            
         }
 
-        public List<Appointment> GetAllPatientAppointmentList(uint id)
+        public List<Appointment> GetAllPatientAppointmentList(long id)
         {
             try
             {
@@ -100,7 +98,7 @@ namespace hospital.Services
             }
 
         }
-        public Appointment GetAppointmentById(uint id)
+        public Appointment GetAppointmentById(long id)
         { 
             try
             {
@@ -115,9 +113,58 @@ namespace hospital.Services
 
         }
 
-        public void ChangeAppointmentState(uint id)
+        public Appointment GetAppointmentByIdAllStates(long id)
         {
+            try
+            {
+                Appointment a = _appointmentDAO.GetAppointmentByIdAllStates(id);
+                a.Doctor = _doctorDAO.GetDoctorById(a.Doctor.Id);
+                return a;
 
+            }
+            catch (MySQLException e)
+            {
+                throw new MySQLException(e.Message, e);
+            }
+
+        }
+        public void AddPaymentToAppointment(Payment p, long appointmentId)
+        {
+            try
+            {
+                _appointmentDAO.PaymentToApppointment(p, appointmentId);
+            }
+            catch (MySQLException e)
+            {
+                throw new MySQLException(e.Message, e);
+            }
+        }
+
+       
+
+        public void CancelAppointment(long id) {
+
+            try
+            {
+                _appointmentDAO.CancelAppointment(id);
+            }
+            catch (MySQLException e)
+            {
+                throw new MySQLException(e.Message, e);
+            }
+        }
+        public void UpdateState(Appointment a)
+        {
+            try
+            {
+                _appointmentDAO.UpdateState(a);
+
+            }
+            catch (MySQLException e)
+            {
+                throw new MySQLException(e.Message, e);
+            }
+            
         }
     }
 }

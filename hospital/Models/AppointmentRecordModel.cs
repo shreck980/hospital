@@ -1,4 +1,5 @@
 ﻿using hospital.Entities;
+using System.ComponentModel.DataAnnotations;
 
 
 namespace hospital.Models
@@ -15,6 +16,12 @@ namespace hospital.Models
             Appointment = new Appointment();
             EHR = new EHR();
             EMR = new EMR();
+            HasPayment = false;
+            Attended = false;
         }
+        [Display(Name ="Платна послуга:")]
+        public bool HasPayment {  get; set; }
+        [Display(Name = "Прийом відвідано:")]
+        public bool Attended {  get; set; }
     }
 }

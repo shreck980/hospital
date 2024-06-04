@@ -16,9 +16,9 @@ namespace hospital
 
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add services to the container.
+            
             builder.Services.AddControllersWithViews();
-            //builder.Services.Add;
+           
             builder.Services.AddSingleton<DAOConfig>();
 
             builder.Services.AddScoped<AppointmentService>();
@@ -82,18 +82,7 @@ namespace hospital
            pattern: "{controller=MedicalCard}/{action=RecordAppointmentPrepare}/{userId}/{userState}/{appId:int}",
            defaults: new { controller = "MedicalCard", action = "RecordAppointmentPrepare" });
 
-            /*app.MapControllerRoute(
-            name: "BecomeFamilyDoctor",
-            pattern: "{controller=Doctor}/{action=BecomeFamilyDoctor}/{id}",
-            defaults: new { controller = "Doctor", action = "BecomeFamilyDoctor" });*/
-
-
-            /*app.MapControllerRoute(
-                name: "default",
-                pattern: "{controller=Home}/{action=Index}/{id?}");*/
-
-
-
+           
 
 
 

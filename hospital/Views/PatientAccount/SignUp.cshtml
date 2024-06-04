@@ -15,42 +15,42 @@
     {
         @Html.ValidationSummary(true)
 
-        <label for="name">Name:</label>
+        @Html.LabelFor(m=>m.Name)
        
         @Html.TextBoxFor(m => m.Name)
        
         @Html.ValidationMessageFor(m => m.Name, "", new { @class = "text-danger" })
       
 
-        <label for="surname">Surname:</label>
+            @Html.LabelFor(m => m.Surname)
        
         @Html.TextBoxFor(m => m.Surname)
        
         @Html.ValidationMessageFor(m => m.Surname, "", new { @class = "text-danger" })
-       
 
-        <label for="email">Email:</label>
+
+            @Html.LabelFor(m => m.Email)
        
         @Html.TextBoxFor(m => m.Email)
      
         @Html.ValidationMessageFor(m => m.Email, "", new { @class = "text-danger" })
         
 
-        <label for="password">Password:</label>
+            @Html.LabelFor(m => m.Password)
        
         @Html.PasswordFor(m => m.Password)
      
         @Html.ValidationMessageFor(m => m.Password, "", new { @class = "text-danger" })
-   
 
-        <label for="birthday">Birthday:</label>
+
+            @Html.LabelFor(m => m.Birthday)
         
         @Html.TextBoxFor(m => m.Birthday, new { type = "date" })
        
         @Html.ValidationMessageFor(m => m.Birthday, "", new { @class = "text-danger" })
-       
 
-        <label for="address">Address:</label>
+
+            @Html.LabelFor(m => m.Address)
      
         @Html.TextAreaFor(m => m.Address, new { rows = 4, cols = 50 })
         
@@ -60,7 +60,7 @@
         //@Html.HiddenFor(m => m.FamilyDoctor)
        // @Html.HiddenFor(m => m.MedicalCard)
         //@Html.HiddenFor(m => m.IsLogged)
-        <input type="submit" value="Submit">
+        <input type="submit" value="Зареєструватися">
     }
     </div>
 </body>

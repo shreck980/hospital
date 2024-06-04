@@ -20,8 +20,8 @@ namespace hospital.DAO.MySQL
             GetLastID = "SELECT MAX(id) FROM doctor_account";
         }
 
-        /*private uint GetLastDoctortId(MySqlConnection connection,MySqlTransaction transaction) {
-            uint id = 1;
+        /*private long GetLastDoctortId(MySqlConnection connection,MySqlTransaction transaction) {
+            long id = 1;
             string query = "SELECT MAX(id) FROM doctor_account";
             using (MySqlCommand command = new MySqlCommand(query, connection))
             {
@@ -29,7 +29,7 @@ namespace hospital.DAO.MySQL
                 var result = command.ExecuteScalar();
                 if (result != null && result != DBNull.Value)
                 {
-                    id = Convert.ToUInt32(result);
+                    id = Convert.ToInt64(result);
                 }
                 else
                 {
@@ -78,7 +78,7 @@ namespace hospital.DAO.MySQL
                 }
             }
         }
-        public Doctor GetDoctorById(uint id)
+        public Doctor GetDoctorById(long id)
         {
 
             // using var connection = new MySqlConnection(config.Url);
@@ -100,13 +100,7 @@ namespace hospital.DAO.MySQL
                         }
                         while (reader.Read())
                         {
-                            d.Id = reader.GetUInt32(0);
-                            d.Name = reader.GetString(1);
-                            d.Surname = reader.GetString(2);
-                            d.Email = reader.GetString(3);
-                            d.Password = reader.GetString(4);
-                            d.State = (AccountStates)reader.GetInt16(5);
-                            d.Speciality = (Speciality)reader.GetInt16(7);
+                            d=MapDoctorFull(reader);
                             Console.WriteLine(d);
 
                         }
@@ -123,7 +117,7 @@ namespace hospital.DAO.MySQL
 
         }
 
-        public Doctor GetDoctorByIdMin(uint id)
+        public Doctor GetDoctorByIdMin(long id)
         {
             Doctor d = new Doctor();
             using (MySqlConnection connection = new MySqlConnection(config.Url))
@@ -143,9 +137,10 @@ namespace hospital.DAO.MySQL
                         }
                         while (reader.Read())
                         {
-                            d.Id = reader.GetUInt32(0);
+                            d.Id = reader.GetInt64(0);
                             d.Name = reader.GetString(1);
                             d.Surname = reader.GetString(2);
+                            d.Speciality = (Speciality)reader.GetInt32(7);
                             Console.WriteLine(d);
 
                         }
@@ -181,13 +176,7 @@ namespace hospital.DAO.MySQL
                         }
                         while (reader.Read())
                         {
-                            d.Id = reader.GetUInt32(0);
-                            d.Name = reader.GetString(1);
-                            d.Surname = reader.GetString(2);
-                            d.Email = reader.GetString(3);
-                            d.Password = reader.GetString(4);
-                            d.State = (AccountStates)reader.GetInt16(5);
-                            d.Speciality = (Speciality)reader.GetInt16(7);
+                            d = MapDoctorFull(reader);
                             Console.WriteLine(d);
 
                         }
@@ -208,7 +197,11 @@ namespace hospital.DAO.MySQL
 
         public List<Doctor> GetDoctorsBySpeciality(Speciality speciality)
         {
-
+            string query = "SELECT* FROM doctor_account where speciality = @speciality and state =@state";
+            if (speciality == Speciality.Therapist)
+            {
+                query = "select*from doctor_account d where speciality = @speciality and state =@state  and (select count(id) from patient_account where family_doctor=d.id)<2000;";
+            }
             // using var connection = new MySqlConnection(config.Url);
             List<Doctor> doctors = new List<Doctor>();
 
@@ -216,7 +209,7 @@ namespace hospital.DAO.MySQL
             {
                 using (MySqlConnection connection = new MySqlConnection(config.Url))
                 {
-                    using (var command = new MySqlCommand("SELECT* FROM doctor_account where speciality = @speciality and state =@state", connection))
+                    using (var command = new MySqlCommand(query, connection))
                     {
 
                         connection.Open();
@@ -231,7 +224,7 @@ namespace hospital.DAO.MySQL
                             while (reader.Read())
                             {
                                 Doctor d = new Doctor();
-                                d.Id = reader.GetUInt32(0);
+                                d.Id = reader.GetInt64(0);
                                 d.Name = reader.GetString(1);
                                 d.Surname = reader.GetString(2);
                                 //d.Email = reader.GetString(3);
@@ -286,7 +279,7 @@ namespace hospital.DAO.MySQL
                             while (reader.Read())
                             {
                                 Doctor d = new Doctor();
-                                d.Id = reader.GetUInt32(0);
+                                d.Id = reader.GetInt64(0);
                                 d.Name = reader.GetString(1);
                                 d.Surname = reader.GetString(2);
                                 //d.Email = reader.GetString(3);
@@ -335,7 +328,7 @@ namespace hospital.DAO.MySQL
                             while (reader.Read())
                             {
                                 Doctor d = new Doctor();
-                                d.Id = reader.GetUInt32(0);
+                                d.Id = reader.GetInt64(0);
                                 d.Name = reader.GetString(1);
                                 d.Surname = reader.GetString(2);
                                 //d.Email = reader.GetString(3);
@@ -361,7 +354,7 @@ namespace hospital.DAO.MySQL
         public string GetSpeciality(Speciality speciality)
         {
 
-           
+
             try
             {
                 string s = "";
@@ -394,8 +387,30 @@ namespace hospital.DAO.MySQL
             }
         }
 
+
+        public Doctor MapDoctorFull(MySqlDataReader reader)
+        {
+            try
+            {
+                Doctor d = new Doctor();
+                d.Id = reader.GetInt64(0);
+                d.Name = reader.GetString(1);
+                d.Surname = reader.GetString(2);
+                d.Email = reader.GetString(3);
+                d.Password = reader.GetString(4);
+                d.State = (AccountStates)reader.GetInt16(5);
+                d.Speciality = (Speciality)reader.GetInt16(7);
+                return d;
+            }
+            catch (MySQLException e)
+            {
+                throw new MySQLException(e.Message, e);
+            }
+        }
     }
 }
+
+
 
 
 

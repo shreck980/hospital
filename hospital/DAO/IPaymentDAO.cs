@@ -4,6 +4,6 @@ namespace hospital.DAO
 {
     public interface IPaymentDAO
     {
-        public Payment? GetPaymentById(uint id);
+        public Payment? GetPaymentById(long id);
     }
 }

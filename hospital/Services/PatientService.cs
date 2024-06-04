@@ -20,7 +20,7 @@ namespace hospital.Services
           
             
         }
-        public Patient GetPatientByID(uint id)
+        public Patient GetPatientByID(long id)
         {
             try
             {
@@ -38,7 +38,7 @@ namespace hospital.Services
 
         }
 
-        public Patient GetPatientByIDSecure(uint id)
+        public Patient GetPatientByIDSecure(long id)
         {
             try
             {
@@ -74,10 +74,10 @@ namespace hospital.Services
 
         public void VerificateAccount(string email)
         {
-            Patient? patient = _patientDAO.GetPatientByEmail(email);
+            Patient? patient = _patientDAO.GetPatientByEmailUnverified(email);
             if (patient == null)
             {
-                throw new MySQLException("Ваш обліковий запис не знайдено, спробуйте зареєструватися ще раз");
+                throw new MySQLException("Ваш обліковий запис не знайдено або ви вже зареєстровані");
 
             }
             patient.State = AccountStates.Verified;
@@ -93,7 +93,7 @@ namespace hospital.Services
             emailService.SendVerificationEmail(model.Email);
         }
 
-        public Patient GetPatientMinById(uint id)
+        public Patient GetPatientMinById(long id)
         {
             try
             {
@@ -124,11 +124,11 @@ namespace hospital.Services
            
 
         }
-        public void UpdateState(AccountStates state)
+        public void UpdateState(AccountStates state,long id)
         {
             try
             {
-                _patientDAO.SetAccountState(state);
+                _patientDAO.SetAccountState(state, id);
             }
             catch (MySQLException e)
             {

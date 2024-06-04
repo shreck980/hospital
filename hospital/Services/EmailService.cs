@@ -9,7 +9,7 @@ namespace hospital.Services
         private string email = "goodhealthhub980@gmail.com";
         private string password = "rgka uqko kyrd sbkg";
 
-        public string SendVerificationEmail(string reciever)
+        public void SendVerificationEmail(string reciever)
         {
             try
             {
@@ -36,7 +36,7 @@ namespace hospital.Services
             {
                 throw new SmtpException(ex.Message, ex);
             }
-            return "Email sent successfuly";
+           
 
         }
     }

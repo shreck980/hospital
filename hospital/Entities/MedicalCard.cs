@@ -3,7 +3,7 @@
    
     public class MedicalCard
     {
-        public uint Id { get; set; }
+        public long Id { get; set; }
         
         public Dictionary<Appointment, (EMR?, EHR?)> AppointmentRecord;
         public MedicalCard()

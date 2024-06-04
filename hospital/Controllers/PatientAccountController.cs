@@ -52,10 +52,8 @@ namespace hospital.Controllers
                     if (BCrypt.Net.BCrypt.Verify(model.Password, p1.Password))
                     {
 
-                        p1.IsLogged = true;
+                        
                         HttpContext.Session.SetInt32("patientId", (int)p1.Id);
-                        HttpContext.Session.SetInt32("isLogged", p1.IsLogged ? 1 : 0);
-
                         TempData["State"] = p1.State;
                         return RedirectToAction("PersonalProfile", "PatientAccount");
                     }
@@ -106,7 +104,8 @@ namespace hospital.Controllers
 
         public IActionResult LogOut()
         {
-            HttpContext.Session.Remove("patientId");
+            HttpContext.Session.Clear();
+            //HttpContext.Session.Remove("patientId");
             return RedirectToAction("StartPage", "Start");
         }
 
@@ -119,18 +118,14 @@ namespace hospital.Controllers
             if (HttpContext.Session.GetInt32("patientId") is null)
             {
                 TempData["ErrorMessage"] = "Час вашої сесії вичерпався, будь ласка зайдіть знову";
-                return RedirectToAction("Login", "PatientAccount");
+                return RedirectToAction("LogOut", "PatientAccount");
             }
 
            
-            if (HttpContext.Session.GetInt32("isLogged") == 0)
-            {
-                TempData["ErrorMessage"] = "Для того щоб мати доступ до цієї функції треба бути авторизованим. Будь ласка авторизуйтесь";
-                return RedirectToAction("Error", "Error");
-            }
+            
 
-            uint id = (uint)HttpContext.Session.GetInt32("patientId");
-            //uint id =3;
+            long id = (long)HttpContext.Session.GetInt32("patientId");
+            //long id =3;
             try
             {
                 Patient p = _patientService.GetPatientByID(id);
@@ -164,7 +159,7 @@ namespace hospital.Controllers
 
 
         [HttpPost]
-        public ActionResult CreateUnverified(Patient model)
+        public IActionResult CreateUnverified(Patient model)
         {
 
             if (!ModelState.IsValid)

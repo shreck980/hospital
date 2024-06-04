@@ -3,7 +3,8 @@
 *@
 @{
 }
-
+@inject IHttpContextAccessor HttpContextAccessor
+@using Enums.Services
 <!DOCTYPE html>
 <html>
 <head>
@@ -13,7 +14,16 @@
 </head>
 <body>
   @model hospital.Entities.MedicalCard
-
+    @{
+        int? doctorId = HttpContextAccessor.HttpContext.Session.GetInt32("doctorId");
+        int? patientId = HttpContextAccessor.HttpContext.Session.GetInt32("patientId");
+    }
+    @if (doctorId is not null && doctorId != 0){
+    @Html.ActionLink("<Назад", "RecordAppointment", "MedicalCard", new
+        {
+           userId =Model.AppointmentRecord.First().Key.Patient.Id
+        })
+    }
   <div class="history_area">
     @foreach(var r in Model.AppointmentRecord) {
         <div class="appointment-block">
@@ -25,31 +35,68 @@
 
                 <div class="details">
                       
-                   <p>Статус: @r.Key.State </p>
+                   <p>Статус: @r.Key.State.GetDescription() </p>
                     <p>Дата: @r.Key.TimeStart.DayOfWeek, @r.Key.TimeStart.ToShortDateString() </p>
                     <p>Час: @r.Key.TimeStart.ToShortTimeString()</p>
                      <p>Номер кабінету: @r.Key.RoomNumber</p>
                    
                 </div>
-
-                <div class="buttons">
-                        @Html.ActionLink("Записатися ще", "BookAppointmentSchedule", "Doctor", new
+                    @if (patientId is not null && patientId != 0)
+                    {
+                        <div class="buttons">
+                            @Html.ActionLink("Записатися ще", "BookAppointmentSchedule", "Doctor", new
+                                {
+                                    doctorId = r.Key.Doctor.Id,
+                                },
+                                     new { @class = "button" })
+                            @if (r.Key.State == AppointmentState.Attended){
+                            @Html.ActionLink("Деталі", "ShowAppointmentDetails", "MedicalCard", new
+                                {
+                                    appointmentId = r.Key.Id,
+                                    medicalCardId = Model.Id,
+                                    state=(int)r.Key.State
+                                    }, new { @class = "button" })
+                            }
+                            else
                             {
-                                doctorId = r.Key.Doctor.Id,
-
-                            },
-                            new{@class = "button"})
-                        @Html.ActionLink("Деталі", "ShowAppointmentDetails", "MedicalCard", new
+                                <a class="button disabled" href="#">Деталі</a>
+                            }
+                            @if (r.Key.State == AppointmentState.Planned || r.Key.State == AppointmentState.Reserved || r.Key.State == AppointmentState.PlannedByReferral)
                             {
-                               appointmentId= r.Key.Id,
-
-                            }, new { @class = "button" })
-                        @Html.ActionLink("Відмінити", "CancelAppointment", "Appointment", new
+                            @Html.ActionLink("Відмінити", "CancelAppointment", "Appointment", new
+                                {
+                                    appointmentId = r.Key.Id,
+                                    patientId = r.Key.Patient.Id,
+                                     state =(int) r.Key.State
+                                }, new { @class = "button" })
+                            }
+                            else
                             {
-                                appointmentId = r.Key.Id,
+                                <a class="button disabled" href="#"> Відмінити</a>
+                            }
+                        </div>
+                    }
+                    else if (doctorId is not null && doctorId != 0)
+                    {
+                        <div class="buttons">
+                             @if (r.Key.State == AppointmentState.Attended){
+                            @Html.ActionLink("Деталі", "ShowAppointmentDetailsForDoctor", "MedicalCard", new
+                                {
+                                    appointmentId = r.Key.Id,
+                                    medicalCardId = Model.Id,
+                                   state = (int)r.Key.State
+                                }, new { @class = "button" })
+                             }
+                            else
+                                {
+                                    <a class="button disabled" href="#"> Деталі</a>
+                                }
+                             
+                        </div>
+                    }
+                    
 
-                            }, new { @class = "button" })
-                </div>
+               
             </div>
         </div>
     }

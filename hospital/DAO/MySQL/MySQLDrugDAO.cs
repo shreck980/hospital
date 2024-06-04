@@ -73,7 +73,7 @@ namespace hospital.DAO.MySQL
                         while (reader.Read())
                         {
                             Drug s = new Drug();
-                            s.Id = reader.GetUInt32(0);
+                            s.Id = reader.GetInt64(0);
                             s.Name = reader.GetString(1);
                             sList.Add(s);
                         }

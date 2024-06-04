@@ -1,16 +1,21 @@
 ﻿using hospital.DAO;
 using hospital.Entities;
+using hospital.Models;
 using hospital.Exceptions;
+using System.Reflection;
 
 namespace hospital.Services
 {
     public class MedicalCardService
     {
         IMedicalCardDAO _medicalCardDAO;
-        public MedicalCardService(IMedicalCardDAO medicalCardDAO) {
+        IAppointmentDAO _appointmentDAO;
+        public MedicalCardService(IMedicalCardDAO medicalCardDAO, IAppointmentDAO appointmentDAO )
+        {
             _medicalCardDAO = medicalCardDAO;
+            _appointmentDAO = appointmentDAO;
         }
-        public MedicalCard GetMedicalCardEmpty(uint id)
+        public MedicalCard GetMedicalCardEmpty(long id)
         {
             try
             {
@@ -27,7 +32,7 @@ namespace hospital.Services
                 throw new NoSuchRecord(e.Message, e);
             }
         }
-        public MedicalCard GetMedicalCardForPatient(uint id)
+        public MedicalCard GetMedicalCardForPatient(long id)
         {
             try
             {
@@ -44,7 +49,7 @@ namespace hospital.Services
                 throw new NoSuchRecord(e.Message, e);
             }
         }
-        public void AddMedicalCard(uint patientId)
+        public void AddMedicalCard(long patientId)
         {
             try
             {
@@ -57,11 +62,42 @@ namespace hospital.Services
             }
            
         }
-        public void AddAppointmentRecord(MedicalCard medicalCard)
+        public void AddAppointmentRecord(AppointmentRecordModel model)
         {
             try
             {
-                _medicalCardDAO.AddAppointmentRecord(medicalCard);
+                MedicalCard m = new MedicalCard();
+                model.EHR.Drugs = model.EHR.Drugs.Where(d => d.IsSelected == true).
+                Select(d =>
+                        {
+                            d.ExpirationDate = DateTime.Now.AddMonths(3);
+                            return d;
+                        }).ToList();
+               
+                if (model.EMR.Referral.Doctor.Id != 0)
+                {
+                    model.EMR.Referral.ExpirationDate = DateTime.Now.AddMonths(2);
+                    //model.EMR.Referral.AppointmetnId = model.Appointment.Id;
+                }
+                if (model.HasPayment)
+                {
+                    model.Appointment.Payment = new Payment();
+                    model.Appointment.Payment.Price = 0;
+                    model.Appointment.Payment.Patient.Id = model.Appointment.Patient.Id;
+                    model.Appointment.Payment.DateIssued = DateTime.Now;
+                    _appointmentDAO.PaymentToApppointment(model.Appointment.Payment, model.Appointment.Id);
+                }
+                model.EHR.Symptoms = model.EHR.Symptoms.Where(s => s.IsSelected == true).ToList();
+                if (model.Appointment.State == AppointmentState.PlannedByReferral)
+                {
+                    _medicalCardDAO.UpdateReferralState(_medicalCardDAO.GetReferralIdByAppointmentId(m.AppointmentRecord.Keys.First().Id), (int)ReferralState.Visited, null);
+                }
+                model.Appointment.State = AppointmentState.Attended;
+                m.AppointmentRecord.Add(model.Appointment, (model.EMR, model.EHR));
+                m.Id = model.Appointment.Patient.MedicalCard.Id;
+
+                _medicalCardDAO.AddAppointmentRecord(m);
+               
 
             }
             catch (NoSuchRecord e)
@@ -75,12 +111,12 @@ namespace hospital.Services
 
         }
 
-        public (EMR, EHR) GetAppointmentDetailsPatient(uint appointment)
+        public (EMR, EHR) GetAppointmentDetailsPatient(long appointment)
         {
             try
             {
                 return _medicalCardDAO.GetAppointmentDetailsPatient(appointment);
-                
+
             }
             catch (MySQLException e)
             {
@@ -91,6 +127,33 @@ namespace hospital.Services
                 throw new NoSuchRecord(e.Message, e);
             }
         }
+
+        public void DeleteReferral(long id)
+        {
+            try
+            {
+                _medicalCardDAO.DeleteReferral(id);
+
+            }
+            catch (MySQLException e)
+            {
+                throw new MySQLException(e.Message, e);
+            }
+        }
+
+        public void UpdateReferralState(long referralId, int state, long? appointment)
+        {
+            try
+            {
+                _medicalCardDAO.UpdateReferralState( referralId,  state, appointment);
+
+            }
+            catch (MySQLException e)
+            {
+                throw new MySQLException(e.Message, e);
+            }
+        }
+
 
     }
 }

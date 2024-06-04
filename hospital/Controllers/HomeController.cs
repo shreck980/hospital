@@ -60,6 +60,132 @@ namespace hospital.Controllers
 
         public IActionResult Index()
         {
+            Doctor doctor = new Doctor { 
+                Name="Îëåñü",
+                Surname = "Ïåðëèíà",
+                Email="perlyna782@example.com",
+                Password = BCrypt.Net.BCrypt.HashPassword("555"),
+                State=AccountStates.Active,
+                Schedule = new List<Event>{
+                    new Event(new DateTime(2024, 06, 3, 13, 0, 0), new DateTime(2024, 06, 3, 13, 30, 0), null),
+                    new Event(new DateTime(2024, 06, 3, 13, 30, 0), new DateTime(2024, 06, 3, 14, 00, 0), null),
+                    new Event(new DateTime(2024, 06, 7, 14, 00, 0), new DateTime(2024, 06, 7, 14, 30, 0), null)
+                },
+
+                Speciality = Speciality.Gynecologist 
+
+             };
+
+            Doctor doctor2 = new Doctor
+            {
+                Name = "Ìàêàð",
+                Surname = "Âåëè÷êî",
+                Email = "velychko123@example.com",
+                Password = BCrypt.Net.BCrypt.HashPassword("555"),
+                State = AccountStates.Active,
+                Schedule = new List<Event>{
+        new Event(new DateTime(2024, 06, 4, 09, 0, 0), new DateTime(2024, 06, 4, 09, 30, 0), null),
+        new Event(new DateTime(2024, 06, 4, 10, 0, 0), new DateTime(2024, 06, 4, 10, 30, 0), null),
+        new Event(new DateTime(2024, 06, 8, 11, 0, 0), new DateTime(2024, 06, 8, 11, 30, 0), null)
+    },
+                Speciality = Speciality.Gastroenterologist
+            };
+
+            Doctor doctor3 = new Doctor
+            {
+                Name = "Ìàð³ÿ",
+                Surname = "Äæóðà",
+                Email = "dzura@example.com",
+                Password = BCrypt.Net.BCrypt.HashPassword("555"),
+                State = AccountStates.Active,
+                Schedule = new List<Event>{
+        new Event(new DateTime(2024, 06, 5, 15, 0, 0), new DateTime(2024, 06, 5, 15, 30, 0), null),
+        new Event(new DateTime(2024, 06, 5, 16, 0, 0), new DateTime(2024, 06, 5, 16, 30, 0), null),
+        new Event(new DateTime(2024, 06, 9, 17, 0, 0), new DateTime(2024, 06, 9, 17, 30, 0), null)
+    },
+                Speciality = Speciality.Dermatologist
+            };
+
+            Doctor doctor4 = new Doctor
+            {
+                Name = "Âàñèëü",
+                Surname = "Êâ³òêà",
+                Email = "flower666@example.com",
+                Password = BCrypt.Net.BCrypt.HashPassword("555"),
+                State = AccountStates.Active,
+                Schedule = new List<Event>{
+        new Event(new DateTime(2024, 06, 6, 08, 0, 0), new DateTime(2024, 06, 6, 08, 30, 0), null),
+        new Event(new DateTime(2024, 06, 6, 09, 0, 0), new DateTime(2024, 06, 6, 09, 30, 0), null),
+        new Event(new DateTime(2024, 06, 10, 10, 0, 0), new DateTime(2024, 06, 10, 10, 30, 0), null)
+    },
+                Speciality = Speciality.Cardiologist
+            };
+
+            Doctor doctor5 = new Doctor
+            {
+                Name = "Ìåëàí³ÿ",
+                Surname = "Âîëîíèöü",
+                Email = "volonyc88@example.com",
+                Password = BCrypt.Net.BCrypt.HashPassword("555"),
+                State = AccountStates.Active,
+                Schedule = new List<Event>{
+        new Event(new DateTime(2024, 06, 7, 12, 0, 0), new DateTime(2024, 06, 7, 12, 30, 0), null),
+        new Event(new DateTime(2024, 06, 7, 13, 0, 0), new DateTime(2024, 06, 7, 13, 30, 0), null),
+        new Event(new DateTime(2024, 06, 11, 14, 0, 0), new DateTime(2024, 06, 11, 14, 30, 0), null)
+    },
+                Speciality = Speciality.Neurologist
+            };
+
+            Doctor doctor1= new Doctor
+            {
+                Name = "Îðåñò",
+                Surname = "Ï³ðíèêîçà",
+                Email = "o.pirnykoza@example.com",
+                Password = BCrypt.Net.BCrypt.HashPassword("555"),
+                State = AccountStates.Active,
+                Schedule = new List<Event>{
+        new Event(new DateTime(2024, 06, 8, 10, 0, 0), new DateTime(2024, 06, 8, 10, 30, 0), null),
+        new Event(new DateTime(2024, 06, 8, 11, 0, 0), new DateTime(2024, 06, 8, 11, 30, 0), null),
+        new Event(new DateTime(2024, 06, 12, 12, 0, 0), new DateTime(2024, 06, 12, 12, 30, 0), null)
+    },
+                Speciality = Speciality.Dentist
+            };
+
+           /* _scheduleDAO.AddSchedule(new List<Event>{
+                    new Event(new DateTime(2024, 06, 3, 13, 0, 0), new DateTime(2024, 06, 3, 13, 30, 0), null),
+                    new Event(new DateTime(2024, 06, 3, 13, 30, 0), new DateTime(2024, 06, 3, 14, 00, 0), null),
+                    new Event(new DateTime(2024, 06, 7, 14, 00, 0), new DateTime(2024, 06, 7, 14, 30, 0), null)
+                }, 5);
+            _scheduleDAO.AddSchedule(new List<Event>{
+        new Event(new DateTime(2024, 06, 8, 10, 0, 0), new DateTime(2024, 06, 8, 10, 30, 0), null),
+        new Event(new DateTime(2024, 06, 8, 11, 0, 0), new DateTime(2024, 06, 8, 11, 30, 0), null),
+        new Event(new DateTime(2024, 06, 12, 12, 0, 0), new DateTime(2024, 06, 12, 12, 30, 0), null)
+    }, 6);
+
+            _scheduleDAO.AddSchedule(new List<Event>{
+        new Event(new DateTime(2024, 06, 7, 12, 0, 0), new DateTime(2024, 06, 7, 12, 30, 0), null),
+        new Event(new DateTime(2024, 06, 7, 13, 0, 0), new DateTime(2024, 06, 7, 13, 30, 0), null),
+        new Event(new DateTime(2024, 06, 11, 14, 0, 0), new DateTime(2024, 06, 11, 14, 30, 0), null)
+    }, 7);
+            _scheduleDAO.AddSchedule(new List<Event>{
+        new Event(new DateTime(2024, 06, 6, 08, 0, 0), new DateTime(2024, 06, 6, 08, 30, 0), null),
+        new Event(new DateTime(2024, 06, 6, 09, 0, 0), new DateTime(2024, 06, 6, 09, 30, 0), null),
+        new Event(new DateTime(2024, 06, 10, 10, 0, 0), new DateTime(2024, 06, 10, 10, 30, 0), null)
+    }, 8);
+
+            _scheduleDAO.AddSchedule(new List<Event>{
+        new Event(new DateTime(2024, 06, 4, 09, 0, 0), new DateTime(2024, 06, 4, 09, 30, 0), null),
+        new Event(new DateTime(2024, 06, 4, 10, 0, 0), new DateTime(2024, 06, 4, 10, 30, 0), null),
+        new Event(new DateTime(2024, 06, 8, 11, 0, 0), new DateTime(2024, 06, 8, 11, 30, 0), null)
+    }, 9);
+
+            _scheduleDAO.AddSchedule(new List<Event>{
+        new Event(new DateTime(2024, 06, 5, 15, 0, 0), new DateTime(2024, 06, 5, 15, 30, 0), null),
+        new Event(new DateTime(2024, 06, 5, 16, 0, 0), new DateTime(2024, 06, 5, 16, 30, 0), null),
+        new Event(new DateTime(2024, 06, 9, 17, 0, 0), new DateTime(2024, 06, 9, 17, 30, 0), null)
+    }, 10);*/
+
+
             //_patientDAO.GetAllPatients();
             //_patientDAO.GetAllPatients();
             // _patientDAO.AddPatientWithoutÑonfirmation(example2);

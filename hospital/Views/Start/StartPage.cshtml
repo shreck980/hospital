@@ -9,22 +9,28 @@
     <link rel="stylesheet" href="~/css/styles.css">
 </head>
 <body>
-<div class="account_question">
+    <div class="form-container" style="text-align: center; max-width:600px;">
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+        }
         <h3>Чи маєте Ви персональний обліковий запис?</h3>
-        <div class="button-container">
-        <a asp-controller="PatientAccount" asp-action="LogIn">
-            <button class="button_default">Так, увійти</button></a>
+        <div class="buttons" style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;width:100%;" >
+           
+                <a asp-controller="PatientAccount" asp-action="LogIn" class="button" style="margin: 10px;">Так, увійти</a>
+                  
+                <a asp-controller="PatientAccount" asp-action="SignUp" class="button" style="margin: 10px;min-width: 250px;">Ні, зареєструватися</a>
+           
         </div>
-        <div class="button-container">
-            <a asp-controller="PatientAccount" asp-action="SignUp">
-                <button class="button_default">Ні, зареєструватися</button></a>
-        </div>
-    
-        <div class="links_to_another_users">
-              <a class="another_users_link" asp-controller="Doctor" asp-action="Login">Я лікар</a>
 
-            <a class="another_users_link"asp-controller ="Reception" asp-action="Login">Я працівник/ця рецепції</a>
+        <div class="links_to_another_users" style="margin-top: 20px; justify-content:center;">
+            <a class="button" style="margin: 15px;" asp-controller="Doctor" asp-action="Login">Я лікар</a>
+            <a class="button" style="margin: 15px;" asp-controller="Reception" asp-action="Login">Я працівник/ця рецепції</a>
         </div>
-</div>
+    </div>
+
+
+
+
 </body>
 </html>

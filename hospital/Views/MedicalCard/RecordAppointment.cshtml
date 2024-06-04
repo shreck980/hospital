@@ -4,7 +4,7 @@
 @{
 }
 
-
+@using Enums.Services
 @{
     ViewData["Title"] = "Record Appointment";
 }
@@ -12,7 +12,7 @@
 
 <h2 style="text-align:center;">Записати прийом</h2>
 @model hospital.Models.AppointmentRecordModel
-
+  
 <div class="form-container" style="max-width:900px">
 @using (Html.BeginForm("SaveAppointmentRecord", "MedicalCard", FormMethod.Post))
 {
@@ -39,9 +39,9 @@
         </div>
         <div class="row">
             <div class="col-md-12">
-                    @Html.LabelFor(model => model.Appointment.Patient.FamilyDoctor)
+                    <lable style="font-weight:bold;">Сімейний лікар</lable>
                     <div style="display:flex;flex-direction:row;">
-                    @Html.DisplayFor(model => model.Appointment.Patient.FamilyDoctor.Name) <!-- Display family doctor here -->
+                    @Html.DisplayFor(model => model.Appointment.Patient.FamilyDoctor.Name) 
                     @Html.DisplayFor(model => model.Appointment.Patient.FamilyDoctor.Surname)
                     </div>
             </div>
@@ -56,13 +56,43 @@
             @Html.LabelFor(model => model.Appointment.TimeStart)
             @Html.DisplayFor(model => model.Appointment.TimeStart)
             @Html.LabelFor(model => model.Appointment.Doctor)
+            @Html.DisplayFor(model => model.Appointment.Doctor.Name)
             @Html.DisplayFor(model => model.Appointment.Doctor.Surname)
+          <p> - @Model.Appointment.Doctor.Speciality.GetDescription()</p>
             </div>
-            <div class="col-md-6">
+                <div class="col-md-6" style=" display: flex;flex-direction:column;">
             @Html.LabelFor(model => model.Appointment.ReasonForAppeal)
-            @Html.DisplayFor(model => model.Appointment.ReasonForAppeal)
-            </div>
+                   
+                    @if (string.IsNullOrEmpty(Model.Appointment.ReasonForAppeal))
+                    {
+                        <p>Не зазначено</p>
+                    }
+                    else{
+                    @Html.DisplayFor(model => model.Appointment.ReasonForAppeal)
+                    }
+            @Html.ActionLink("Медична картка пацієнта", "OpenAppointmentHistoryForPatient", "MedicalCard", new
+            {
+                patientId = Model.Appointment.Patient.Id
+            })
+                    <div style="display:flex;flex-direction:row;">
+                        @Html.LabelFor(model => model.HasPayment)
+                        <p> </p>
+                        @Html.CheckBoxFor(m => m.HasPayment)
+                    </div>
 
+                    <div style="display:flex;flex-direction:row;">
+                        @Html.LabelFor(model => model.Attended)
+                        <p> </p>
+                        @Html.CheckBoxFor(m => m.Attended)
+                    </div>
+
+                    <div style="display:flex;flex-direction:row;">
+                    @Html.LabelFor(model => model.Appointment.State)
+                    <p>: @Model.Appointment.State.GetDescription()</p>
+                    </div>
+
+            </div>
+            
            
             
         </div>
@@ -71,6 +101,11 @@
     <div class="examination-result">
         @Html.LabelFor(model => model.EHR.ResultOfExamination)
             @Html.TextAreaFor(model => model.EHR.ResultOfExamination, new { @class = "form-control", rows = "4" })
+                @if (TempData["ErrorMessage"] != null)
+                {
+                    <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+                }
+               
     </div>
             <hr>
      <div>
@@ -93,7 +128,7 @@
 
         <div style="display: flex; justify-content: space-between;">
             <div class="drug-checkboxes">
-                <h4>Drugs</h4>
+                <h4>Рецепт</h4>
                 <div class="scrollable">
                     <div class="row" style="column-count: 3;">
                         <!-- Display checkboxes for drugs -->
@@ -114,7 +149,7 @@
             </div>
 
             <div class="symptom-checkboxes">
-                <h4>Symptoms</h4>
+                <h4>Симптоми</h4>
                 <div class="scrollable">
                     <div class="row" style="column-count: 2;">
                         <!-- Display checkboxes for symptoms -->
@@ -135,7 +170,7 @@
         </div>
       
        <br>
-        //@Html.HiddenFor(m => m.Appointment)
+       
         @Html.HiddenFor(m => m.Appointment.Patient.Id)
         @Html.HiddenFor(m => m.Appointment.Id)
         @Html.HiddenFor(m => m.Appointment.Doctor.Id)

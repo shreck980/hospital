@@ -6,5 +6,6 @@ namespace hospital.DAO
     {
         public void AddSymptom(List<Symptom> symptoms);
         public List<Symptom> GetAllSymptoms();
+        public List<Symptom> GetAllSymptomsPerAppointment(long ehr);
     }
 }

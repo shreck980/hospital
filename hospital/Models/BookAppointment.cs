@@ -14,17 +14,18 @@ namespace hospital.Models
         public Doctor Doctor { get; set; }
 
         [Required(ErrorMessage = "Ви повинні обрати години прийому")]
-        [Range(0, uint.MaxValue, ErrorMessage = "Ви повинні обрати години прийому")]
-        public uint? ScheduleId {  get; set; }
+        [Range(0, long.MaxValue, ErrorMessage = "Ви повинні обрати години прийому")]
+        public long? ScheduleId {  get; set; }
        
         [DisplayFormat(ConvertEmptyStringToNull = false)]
         [StringLength(80, ErrorMessage = "Причина запису на прийом не може бути довше 80 символів")]
         public string? ReasonForAppeal { get; set; }
         public List<SelectListItem> Schedule {  get; set; }
+        public long? ReferralId { get; set; }
         public void ScheduleForView()
         {
            var sortedSchedule = Doctor.Schedule.OrderBy(s => s.Start.Hour).ToList();
-            var groups = new Dictionary<string, SelectListGroup>();
+           var groups = new Dictionary<string, SelectListGroup>();
 
             // Iterate over your schedule entries and add them to the SelectList
             foreach (var e in sortedSchedule)

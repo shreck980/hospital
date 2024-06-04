@@ -4,6 +4,7 @@ using hospital.Exceptions;
 using hospital.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Enums.Services;
 
 namespace hospital.Controllers
 {
@@ -16,14 +17,14 @@ namespace hospital.Controllers
         DrugService _drugService;
         SymptomService _symptomService;
         public MedicalCardController(MedicalCardService medicalCardService,
-            PatientService patientService,AppointmentService appointmentService, DoctorService doctorService,
+            PatientService patientService, AppointmentService appointmentService, DoctorService doctorService,
             DrugService drugService, SymptomService symptomService)
         {
             _medicalCardService = medicalCardService;
             _patientService = patientService;
             _appointmentService = appointmentService;
             _doctorService = doctorService;
-            _drugService = drugService; 
+            _drugService = drugService;
             _symptomService = symptomService;
         }
         public IActionResult Index()
@@ -31,52 +32,57 @@ namespace hospital.Controllers
             return View();
         }
 
-   
+
         [Route("MedicalCard/RecordAppointmentPrepare/{userId}/{userState}/{appId:int}")]
         [HttpGet]
         public IActionResult RecordAppointmentPrepare(string userId, string userState, int appId)
         {
             HttpContext.Session.SetInt32("appointmentId", appId);
-            return RedirectToAction("RecordAppointment", "MedicalCard", new { userId, userState});
+            return RedirectToAction("RecordAppointment", "MedicalCard", new { userId, userState });
         }
 
 
         [Route("MedicalCard/RecordAppointment/{userId}/{userState}")]
+        [Route("MedicalCard/RecordAppointment/{userId}")]
         [Route("MedicalCard/RecordAppointment")]
-
         [HttpGet]
         public IActionResult RecordAppointment(string userId, string userState)
         {
-          
-            if (userState is not null && userState == AccountStates.PreActive.ToString())
+            if (!HttpContext.Session.IsAvailable || HttpContext.Session.GetInt32("doctorId") is null)
             {
-                return RedirectToAction("BecomeFamilyDoctor", "Doctor", new { id = userId });
+                TempData["ErrorMessage"] = "Час вашої сесії вичерпався, будь ласка зайдіть знову";
+                return RedirectToAction("LogOut", "Doctor");
             }
+           
+                if (userState is not null && userState == AccountStates.PreActive.ToString())
+                {
+                    return RedirectToAction("BecomeFamilyDoctor", "Doctor", new { id = userId });
+                }
+            
             try
             {
-                //uint id = uint.Parse(userId);
-              
-               AppointmentRecordModel model = new AppointmentRecordModel();
-               
-              
-                model.Appointment = _appointmentService.GetAppointmentById(HttpContext.Session.GetInt32("appointmentId").HasValue ? (uint)HttpContext.Session.GetInt32("appointmentId") : 0);
-               
+                //long id = long.Parse(userId);
+
+                AppointmentRecordModel model = new AppointmentRecordModel();
+
+
+                model.Appointment = _appointmentService.GetAppointmentById(HttpContext.Session.GetInt32("appointmentId").HasValue ? (long)HttpContext.Session.GetInt32("appointmentId") : 0);
+
                 model.Appointment.Patient = _patientService.GetPatientByID(model.Appointment.Patient.Id);
                 model.Appointment.Patient.MedicalCard = _medicalCardService.GetMedicalCardEmpty(model.Appointment.Patient.Id);
                 model.Appointment.Patient.FamilyDoctor = _doctorService.GetDoctorsByIdMin(model.Appointment.Patient.FamilyDoctor.Id);
                 model.Appointment.Doctor = _doctorService.GetDoctorsByIdMin(model.Appointment.Doctor.Id);
-                model.EHR.Drugs = _drugService.GetAllDrugs().OrderBy(d=>d.Name).ToList();   
+                model.EHR.Drugs = _drugService.GetAllDrugs().OrderBy(d => d.Name).ToList();
                 model.EHR.Symptoms = _symptomService.GetAllSymptoms().OrderBy(s => s.Name).ToList();
                 ViewBag.Doctors = _doctorService.GetAllDoctors().Select(d => new
                 {
                     Id = d.Id,
-                    FullName = d.Name + " " + d.Surname,
-                    Speciality = _doctorService.GetSpeciality(d.Speciality)
+                    FullName = d.Name + " " + d.Surname+" - "+d.Speciality.GetDescription()
                 }).ToList();
                 ;
 
                 return View(model);
-            
+
             }
             catch (MySQLException e)
             {
@@ -88,13 +94,13 @@ namespace hospital.Controllers
                 return RedirectToAction("CreateMedicalCard", "MedicalCard", new { id = userId });
             }
 
-           
+
         }
 
         [HttpGet("[controller]/[action]/{id}")]
         public IActionResult CreateMedicalCard(string id)
         {
-            uint userId = uint.Parse(id);
+            long userId = long.Parse(id);
             Patient p = _patientService.GetPatientByIDSecure(userId);
             return View(p);
 
@@ -106,7 +112,7 @@ namespace hospital.Controllers
             try
             {
                 _medicalCardService.AddMedicalCard(p.Id);
-                return RedirectToAction("RecordAppointment", "MedicalCard", new {userState = ((int)p.State).ToString() });
+                return RedirectToAction("RecordAppointment", "MedicalCard", new { userState = ((int)p.State).ToString() });
             }
             catch (MySQLException e)
             {
@@ -118,26 +124,26 @@ namespace hospital.Controllers
         [HttpPost]
         public IActionResult SaveAppointmentRecord(AppointmentRecordModel model)
         {
+            if (string.IsNullOrEmpty(model.EHR.ResultOfExamination)&& model.Attended)
+            {
+                TempData["ErrorMessage"] = "Результат осбтеження не може бути пустим";
+                return RedirectToAction("RecordAppointment", "MedicalCard", new 
+                {   
+                      userId = model.Appointment.Patient.Id,
+                     userState = model.Appointment.Patient.State
+                });
+            }
+            if (!model.Attended)
+            {
+                model.Appointment.State = AppointmentState.NotAttended;
+                _appointmentService.UpdateState(model.Appointment);
+                return RedirectToAction("PersonalProfile", "Doctor");
+            }
 
             try
             {
-                MedicalCard m = new MedicalCard();
-                model.EHR.Drugs = model.EHR.Drugs.Where(d => d.IsSelected == true).
-                        Select(d =>
-                        {
-                            d.ExpirationDate = DateTime.Now.AddMonths(3);
-                            return d;
-                        }).ToList();
-                if(model.EMR.Referral.Doctor.Id != 0)
-                {
-                    model.EMR.Referral.ExpirationDate = DateTime.Now.AddMonths(2);
-                }
-                model.EHR.Symptoms = model.EHR.Symptoms.Where(s => s.IsSelected == true).ToList();
-                model.Appointment.State = AppointmentState.Attended;
-                m.AppointmentRecord.Add(model.Appointment, (model.EMR, model.EHR));
-                m.Id = model.Appointment.Patient.MedicalCard.Id;
-
-                _medicalCardService.AddAppointmentRecord(m);
+                
+                _medicalCardService.AddAppointmentRecord(model);
                 HttpContext.Session.Remove("appointmentId");
             }
             catch (MySQLException e)
@@ -162,18 +168,37 @@ namespace hospital.Controllers
         }
 
         [HttpGet("[controller]/[action]")]
-        public IActionResult OpenAppointmentHistoryForPatient()
+        [HttpGet("[controller]/[action]/{patientId:long}")]
+        public IActionResult OpenAppointmentHistoryForPatient(long? patientId)
         {
+            if (!patientId.HasValue)
+            {
+                if (HttpContext.Session.GetInt32("patientId") is null)
+                {
+                    TempData["ErrorMessage"] = "Час вашої сесії вичерпався, будь ласка зайдіть знову";
+                    return RedirectToAction("LogOut", "PatientAccount");
+                }
+            }
+           
             try
             {
-                int patientId = HttpContext.Session.GetInt32("patientId") ?? 0;
-                MedicalCard c = _medicalCardService.GetMedicalCardEmpty((uint)patientId);  
-                List<Appointment> appointments = _appointmentService.GetAllPatientAppointmentList((uint)patientId);
-                foreach(Appointment a in appointments)
+                long id = 0;
+                if (patientId.HasValue)
+                {
+                    id = patientId.Value;
+                }
+                else
+                {
+                    id = HttpContext.Session.GetInt32("patientId") ?? 0;
+                }
+
+                MedicalCard c = _medicalCardService.GetMedicalCardEmpty(id);
+                List<Appointment> appointments = _appointmentService.GetAllPatientAppointmentList(id);
+                foreach (Appointment a in appointments)
                 {
                     c.AppointmentRecord.Add(a, (null, null));
                 }
-            return View(c);
+                return View(c);
             }
             catch (MySQLException e)
             {
@@ -188,13 +213,101 @@ namespace hospital.Controllers
 
         }
 
-        [HttpGet("[controller]/[action]/{appointmentId:int}")]
-        public IActionResult ShowAppointmentDetails(int appointmentId)
+        [HttpGet("[controller]/[action]/{appointmentId:long}/{medicalCardId:long}/{state:int}")]
+        public IActionResult ShowAppointmentDetails(long appointmentId, long medicalCardId,int state)
         {
-            return View();
+           
+            try
+            {
+                MedicalCard c = new MedicalCard();
+                c.Id = medicalCardId;
+                Appointment a = _appointmentService.GetAppointmentByIdAllStates(appointmentId);
+                a.Patient = _patientService.GetPatientByID(a.Patient.Id);
+                (EMR, EHR) details = _medicalCardService.GetAppointmentDetailsPatient(a.Id);
+                c.AppointmentRecord.Add(a, details);
+                return View(c);
+            }
+            catch (MySQLException e)
+            {
+                TempData["ErrorMessage"] = e.Message;
+                return RedirectToAction("Error", "Error");
+            }
+            catch (NoSuchRecord e)
+            {
+                TempData["ErrorMessage"] = e.Message;
+                return RedirectToAction("Error", "Error");
+            }
+
         }
 
 
+        [HttpGet("[controller]/[action]/{appointmentId:long}/{medicalCardId:long}/{state:int}")]
+        public IActionResult ShowAppointmentDetailsForDoctor(long appointmentId, long medicalCardId,int state)
+        {
+           
+            try
+            {
+                MedicalCard c = new MedicalCard();
+                c.Id = medicalCardId;
+                Appointment a = _appointmentService.GetAppointmentByIdAllStates(appointmentId);
+                a.Patient = _patientService.GetPatientByID(a.Patient.Id);
+                (EMR, EHR) details = _medicalCardService.GetAppointmentDetailsPatient(a.Id);
+                details.Item2.Symptoms = _symptomService.GetAllSymptomsPerAppointment(details.Item2.Id);
+                c.AppointmentRecord.Add(a, details);
+                return View(c);
+            }
+            catch (MySQLException e)
+            {
+                TempData["ErrorMessage"] = e.Message;
+                return RedirectToAction("Error", "Error");
+            }
+            catch (NoSuchRecord e)
+            {
+                TempData["ErrorMessage"] = e.Message;
+                return RedirectToAction("Error", "Error");
+            }
 
+        }
+
+        [HttpGet("[controller]/[action]/{referralId:long}/{patientId:long}")]
+        public IActionResult DeleteReferral(long referralId, long patientId)
+        {
+            try
+            {
+                _medicalCardService.DeleteReferral(referralId);
+            }
+            catch (MySQLException e)
+            {
+                TempData["ErrorMessage"] = e.Message;
+                return RedirectToAction("Error", "Error");
+            }
+
+            return RedirectToAction("OpenAppointmentHistoryForPatient", "MedicalCard", new
+            {
+                patientId
+            });
+
+        }
+
+        [HttpGet("[controller]/[action]/{referralId:long}/{state:int}/{patientId:long}/{appointment:long}")]
+      
+        public IActionResult UpdateReferralState(long referralId,int state, long patientId,long appointment)
+        {
+            try
+            {
+                _medicalCardService.UpdateReferralState(referralId, state, appointment);
+            }
+            catch (MySQLException e)
+            {
+                TempData["ErrorMessage"] = e.Message;
+                return RedirectToAction("Error", "Error");
+            }
+
+            return RedirectToAction("OpenAppointmentHistoryForPatient", "MedicalCard", new
+            {
+                patientId
+            });
+
+        }
     }
-}
+  }

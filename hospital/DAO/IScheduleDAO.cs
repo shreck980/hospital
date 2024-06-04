@@ -4,10 +4,10 @@ namespace hospital.DAO
 {
     public interface IScheduleDAO
     {
-        public Event GetEvenById(uint id);
-        public List<Event> GetScheduleByDoctorIdForPatient(uint doctor);
-        public List<Event> GetScheduleByDoctorIdForDoctor(uint doctor);
-        public void AddSchedule(List<Event> schedule, uint doctor);
-        public void MarkEventAsBooked(uint eventId, uint appointmentId);
+        public Event GetEvenById(long id);
+        public List<Event> GetScheduleByDoctorIdForPatient(long doctor);
+        public List<Event> GetScheduleByDoctorIdForDoctor(long doctor);
+        public void AddSchedule(List<Event> schedule, long doctor);
+        public void MarkEventAsBooked(long eventId, long appointmentId);
     }
 }

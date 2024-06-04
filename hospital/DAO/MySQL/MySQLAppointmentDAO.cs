@@ -2,6 +2,9 @@
 using System.Data;
 using hospital.Entities;
 using hospital.Exceptions;
+using System.Transactions;
+using System.Collections.Generic;
+using System.Data.Common;
 
 namespace hospital.DAO.MySQL
 {
@@ -19,14 +22,15 @@ namespace hospital.DAO.MySQL
         private const string getAppointmentByPatientAndTime = "SELECT* FROM appointment where patient = @patient and time_start = @time;";
         private const string getPatientAppointments = "SELECT* FROM appointment where state in (1, 2) and patient = @patient;";
         private const string getAllPatientAppointments = "SELECT* FROM appointment where  patient = @patient;";
-        private const string getAppointmentById = "SELECT* FROM appointment where id = @id and state in(1,2);";
+        private const string getAppointmentById = "SELECT* FROM appointment where id = @id and (state in(1,2) or state=5);";
+        private const string getAppointmentByIdAllStates = "SELECT* FROM appointment where id = @id;";
         private const string getDoctorAppointments = "SELECT* FROM appointment where doctor = @doctor;";
         private const string GetLastMaxIdPayment = "SELECT MAX(id) FROM payment_info;";
 
 
-        /*  public  uint GetLastAppointmentdId(MySqlConnection connection, MySqlTransaction transaction)
+        /*  public  long GetLastAppointmentdId(MySqlConnection connection, MySqlTransaction transaction)
           {
-              uint id = 1;
+              long id = 1;
 
 
 
@@ -36,7 +40,7 @@ namespace hospital.DAO.MySQL
                   var result = command.ExecuteScalar();
                   if (result != null && result != DBNull.Value)
                   {
-                      id = Convert.ToUInt32(result);
+                      id = Convert.ToInt64(result);
                   }
                   else
                   {
@@ -52,16 +56,16 @@ namespace hospital.DAO.MySQL
 
           }*/
 
-        /* public  uint GetLastPaymentdId(MySqlConnection connection, MySqlTransaction transaction)
+        /* public  long GetLastPaymentdId(MySqlConnection connection, MySqlTransaction transaction)
          {
-             uint id = 1;
+             long id = 1;
              using (MySqlCommand command = new MySqlCommand(GetLastMaxIdPayment, connection))
              {
                  command.Transaction = transaction;
                  var result = command.ExecuteScalar();
                  if (result != null && result != DBNull.Value)
                  {
-                     id = Convert.ToUInt32(result);
+                     id = Convert.ToInt64(result);
                  }
                  else
                  {
@@ -76,34 +80,44 @@ namespace hospital.DAO.MySQL
 
 
          }*/
-
-
-        public void AddApppointment(Appointment a)
+        public void UpdateState(Appointment a)
         {
             using (MySqlConnection connection = new MySqlConnection(config.Url))
             {
                 connection.Open();
-                using (var transaction = connection.BeginTransaction(IsolationLevel.ReadCommitted))
+                using (var transaction = connection.BeginTransaction(System.Data.IsolationLevel.ReadCommitted))
+                {
+                    try
+                    {
+                        using (var command = new MySqlCommand("update appointment set state=@state where id=@id;", connection))
+                        {
+                            command.Transaction = transaction;
+                            command.Parameters.AddWithValue("@state", a.State);
+                            command.Parameters.AddWithValue("@id", a.Id);
+                            command.ExecuteNonQuery();
+                        }
+                        transaction.Commit();
+                    }
+                    catch (MySQLException e)
+                    {
+                        transaction.Rollback();
+                        throw new MySQLException(e.Message, e);
+                    }
+                }
+            }
+        }
+
+            public void AddApppointment(Appointment a)
+            {
+            using (MySqlConnection connection = new MySqlConnection(config.Url))
+            {
+                connection.Open();
+                using (var transaction = connection.BeginTransaction(System.Data.IsolationLevel.ReadCommitted))
                 {
 
                     try
                     {
-                        if (a.Payment != null)
-                        {
-                            a.Payment.Id = GetLastId(connection, transaction, GetLastMaxIdPayment) + 1;
-                            using (MySqlCommand cmd = new MySqlCommand(InsertPayment, connection))
-                            {
-                                cmd.Transaction = transaction;
-
-                                cmd.Parameters.AddWithValue("@id", a.Payment.Id);
-                                cmd.Parameters.AddWithValue("@price", a.Payment.Price);
-                                cmd.Parameters.AddWithValue("@date_issued", a.Payment.DateIssued);
-                                cmd.Parameters.AddWithValue("@date_paid", a.Payment.DatePaid == null ? DBNull.Value : a.Payment.DatePaid);
-                                cmd.Parameters.AddWithValue("@patient", a.Payment.Patient.Id);
-
-                                cmd.ExecuteNonQuery();
-                            }
-                        }
+                       
                         a.Id = GetLastId(connection, transaction) + 1;
 
                         using (MySqlCommand cmd = new MySqlCommand(InsertAppointment, connection))
@@ -133,6 +147,90 @@ namespace hospital.DAO.MySQL
         }
 
 
+        public void PaymentToApppointment(Payment p, long appointmentId)
+        {
+            using (MySqlConnection connection = new MySqlConnection(config.Url))
+            {
+                connection.Open();
+                using (var transaction = connection.BeginTransaction(System.Data.IsolationLevel.ReadCommitted))
+                {
+
+                    try
+                    {
+                        p.Id = GetLastId(connection, transaction, GetLastMaxIdPayment) + 1;
+                        using (MySqlCommand cmd = new MySqlCommand(InsertPayment, connection))
+                        {
+                            cmd.Transaction = transaction;
+
+                            cmd.Parameters.AddWithValue("@id", p.Id);
+                            cmd.Parameters.AddWithValue("@price", p.Price);
+                            cmd.Parameters.AddWithValue("@date_issued", p.DateIssued);
+                            cmd.Parameters.AddWithValue("@date_paid", p.DatePaid == null ? DBNull.Value : p.DatePaid);
+                            cmd.Parameters.AddWithValue("@patient", p.Patient.Id);
+
+                            cmd.ExecuteNonQuery();
+                        }
+
+                        using (MySqlCommand cmd = new MySqlCommand("update appointment set payment=@id where id=@aId;", connection))
+                        {
+                            cmd.Transaction = transaction;
+                            cmd.Parameters.AddWithValue("@id", p.Id);
+                            cmd.Parameters.AddWithValue("@aId", appointmentId);
+
+                            cmd.ExecuteNonQuery();
+                        }
+                        transaction.Commit();
+                    }
+                    catch (MySQLException e)
+                    {
+                        transaction.Rollback();
+                        throw new MySQLException(e.Message, e);
+                    }
+                }
+            }
+        }
+
+        public void CancelAppointment(long id)
+        {
+            using (MySqlConnection connection = new MySqlConnection(config.Url))
+            {
+                connection.Open();
+
+                using (var transaction = connection.BeginTransaction(System.Data.IsolationLevel.Serializable))
+                {
+                    try
+                    {
+                       /* using (MySqlCommand cmd = new MySqlCommand("DELETE FROM schedule WHERE appointment = @id", connection, transaction))
+                        {
+
+                            cmd.Parameters.AddWithValue("@id", id);
+
+
+                            cmd.ExecuteNonQuery();
+                        }*/
+                        using (MySqlCommand cmd = new MySqlCommand("DELETE FROM appointment WHERE id = @id", connection, transaction))
+                        {
+                            
+                            cmd.Parameters.AddWithValue("@id", id);
+
+                          
+                            cmd.ExecuteNonQuery();
+                        }
+
+                        transaction.Commit();
+                    }
+                    catch (MySQLException e)
+                    {
+                        transaction.Rollback();
+                        throw new MySQLException("Error while cancelling appointment: " + e.Message, e);
+                    }
+                }
+            }
+        }
+
+
+
+
         public Appointment GetAppointmentByPatientAndTime(Patient p, DateTime time)
         {
             Appointment a = new Appointment();
@@ -154,15 +252,8 @@ namespace hospital.DAO.MySQL
                             }
                             while (reader.Read())
                             {
-                                a = new Appointment();
-                                a.Id = reader.GetUInt32(4);
-                                a.Patient.Id = reader.GetUInt32(0);
-                                a.Doctor.Id = reader.GetUInt32(1);
-                                a.TimeStart = reader.GetDateTime(2);
-                                a.RoomNumber = reader.GetUInt32(3);
-                                a.State = (AppointmentState)reader.GetInt32(5);
-                                a.ReasonForAppeal = reader.GetString(6);
-                                a.Payment.Id = reader.GetUInt32(7);
+                                a = MapAppointment(reader);
+                               
 
                             }
 
@@ -183,9 +274,9 @@ namespace hospital.DAO.MySQL
             return a;
         }
 
-        public Appointment GetAppointmentById(uint id)
+        public Appointment GetAppointmentById(long id)
         {
-           
+
 
             using (MySqlConnection connection = new MySqlConnection(config.Url))
             {
@@ -202,20 +293,13 @@ namespace hospital.DAO.MySQL
 
                             if (!reader.HasRows)
                             {
-                                throw new NoSuchRecord("Помилка знайти запис на прийом до вас");
+                                throw new NoSuchRecord("Помилка знайти прийом ");
                             }
 
                             while (reader.Read())
                             {
 
-                                a.Id = reader.GetUInt32(4);
-                                a.Patient.Id = reader.GetUInt32(0);
-                                a.Doctor.Id = reader.GetUInt32(1);
-                                a.TimeStart = reader.GetDateTime(2);
-                                a.RoomNumber = reader.GetUInt32(3);
-                                a.State = (AppointmentState)reader.GetInt32(5);
-                                a.ReasonForAppeal = reader.GetString(6);
-                                a.Payment.Id = reader.IsDBNull(7) ? 0 : reader.GetUInt32(7);
+                                a = MapAppointment(reader);
 
                             }
 
@@ -223,8 +307,9 @@ namespace hospital.DAO.MySQL
 
                         }
 
-                        return a;
+                       
                     }
+                    return a;
 
                 }
                 catch (MySQLException e)
@@ -234,10 +319,89 @@ namespace hospital.DAO.MySQL
                 }
             }
 
-            
+
         }
 
-        public List<Appointment> GetPatientAppointments(uint patientId)
+        public Appointment GetAppointmentByIdAllStates(long id)
+        {
+
+
+            using (MySqlConnection connection = new MySqlConnection(config.Url))
+            {
+                Appointment a = new Appointment();
+                try
+                {
+                    connection.Open();
+                    using (var command = new MySqlCommand(getAppointmentByIdAllStates, connection))
+                    {
+                        command.Parameters.AddWithValue("@id", id);
+                        //command.Parameters.AddWithValue("@time", time.ToString("yyyy-MM-dd HH:mm:ss"));
+                        using (var reader = command.ExecuteReader())
+                        {
+
+                            if (!reader.HasRows)
+                            {
+                                throw new NoSuchRecord("Помилка знайти прийом ");
+                            }
+
+                            while (reader.Read())
+                            {
+
+                                a = MapAppointment(reader);
+
+                            }
+
+
+
+                        }
+                    }
+
+                        if (a.Payment.Id != 0)
+                        {
+                            using (var command = new MySqlCommand("select*from payment_info where id=@id", connection))
+                            {
+                               
+                                command.Parameters.AddWithValue("@id", a.Payment.Id);
+
+                                using (var reader = command.ExecuteReader())
+                                {
+                                    if (!reader.HasRows)
+                                    {
+                                        throw new NoSuchRecord("Помилка знайти прийом ");
+                                    }
+                                    while (reader.Read())
+                                    {
+
+                                        a.Payment.Price = reader.GetDecimal(1);
+                                        a.Payment.DateIssued = reader.GetDateTime(2);
+                                        a.Payment.DatePaid = reader.IsDBNull(3) ? DateTime.MinValue : reader.GetDateTime(3);
+                                        a.Payment.Patient.Id = reader.GetInt64(4);
+                                        if (a.Payment.Patient.Id == a.Patient.Id)
+                                        {
+                                            a.Payment.Patient = a.Patient;
+                                        }
+
+                                    }
+                                }
+
+                            }
+                        }
+
+                        return a;
+                    
+
+                }
+                catch (MySQLException e)
+                {
+                    throw new MySQLException(e.Message, e);
+
+                }
+            }
+
+
+        }
+
+        public List<Appointment> GetPatientAppointments(long patientId)
         {
             List<Appointment> aList = new List<Appointment>();
 
@@ -258,24 +422,18 @@ namespace hospital.DAO.MySQL
                         }
                         while (reader.Read())
                         {
-                            Appointment a = new Appointment();
-                            a.Id = reader.GetUInt32(4);
-                            a.Patient.Id = reader.GetUInt32(0);
-                            a.Doctor.Id = reader.GetUInt32(1);
-                            a.TimeStart = reader.GetDateTime(2);
-                            a.RoomNumber = reader.GetUInt32(3);
-                            a.State = (AppointmentState)reader.GetInt32(5);
-                            a.ReasonForAppeal = reader.GetString(6);
-                            a.Payment.Id = reader.IsDBNull(7) ? 0 : reader.GetUInt32(7);
+                            
 
-                            //a.Payment.Id = reader.GetUInt32(7);
-                            aList.Add(a);
+                            //a.Payment.Id = reader.GetInt64(7);
+                            aList.Add(MapAppointment(reader));
                         }
 
 
 
                         //return a;
                     }
+                   
+                      
                     return aList;
 
                 }
@@ -286,9 +444,9 @@ namespace hospital.DAO.MySQL
                 }
             }
 
-          
+
         }
-        public List<Appointment> GetAllPatientAppointments(uint patientId)
+        public List<Appointment> GetAllPatientAppointments(long patientId)
         {
             List<Appointment> aList = new List<Appointment>();
 
@@ -309,18 +467,10 @@ namespace hospital.DAO.MySQL
                         }
                         while (reader.Read())
                         {
-                            Appointment a = new Appointment();
-                            a.Id = reader.GetUInt32(4);
-                            a.Patient.Id = reader.GetUInt32(0);
-                            a.Doctor.Id = reader.GetUInt32(1);
-                            a.TimeStart = reader.GetDateTime(2);
-                            a.RoomNumber = reader.GetUInt32(3);
-                            a.State = (AppointmentState)reader.GetInt32(5);
-                            a.ReasonForAppeal = reader.GetString(6);
-                            a.Payment.Id = reader.IsDBNull(7) ? 0 : reader.GetUInt32(7);
+                           
 
-                            //a.Payment.Id = reader.GetUInt32(7);
-                            aList.Add(a);
+                            //a.Payment.Id = reader.GetInt64(7);
+                            aList.Add(MapAppointment(reader));
                         }
 
 
@@ -340,7 +490,7 @@ namespace hospital.DAO.MySQL
 
         }
 
-        public List<Appointment> GetDoctorAppointments(uint doctor)
+        public List<Appointment> GetDoctorAppointments(long doctor)
         {
             List<Appointment> aList = new List<Appointment>();
 
@@ -355,28 +505,17 @@ namespace hospital.DAO.MySQL
                         command.Parameters.AddWithValue("@doctor", doctor);
 
                         using var reader = command.ExecuteReader();
-                        
-                            if (!reader.HasRows)
-                            {
-                                throw new NoSuchRecord("Ви не маєте жодного запису на прийом");
-                            }
-                            while (reader.Read())
-                            {
-                                Appointment a = new Appointment();
-                                a.Id = reader.GetUInt32(4);
-                                a.Patient.Id = reader.GetUInt32(0);
-                                a.Doctor.Id = reader.GetUInt32(1);
-                                a.TimeStart = reader.GetDateTime(2);
-                                a.RoomNumber = reader.GetUInt32(3);
-                                a.State = (AppointmentState)reader.GetInt32(5);
-                                a.ReasonForAppeal = reader.GetString(6);
-                                a.Payment.Id = a.Payment.Id = reader.IsDBNull(7) ? 0 : reader.GetUInt32(7);
 
-                                //a.Payment.Id = reader.GetUInt32(7);
-                                aList.Add(a);
-                            }
+                        if (!reader.HasRows)
+                        {
+                            throw new NoSuchRecord("Ви не маєте жодного запису на прийом");
+                        }
+                        while (reader.Read())
+                        {          
+                            aList.Add(MapAppointment(reader));
+                        }
 
-                        
+
 
 
                         //return a;
@@ -393,7 +532,34 @@ namespace hospital.DAO.MySQL
 
             return aList;
         }
-        
+
+        private Appointment MapAppointment(MySqlDataReader reader)
+        {
+            try
+            {
+                Appointment a = new Appointment();
+                a.Id = reader.GetInt64(4);
+                a.Patient.Id = reader.GetInt64(0);
+                a.Doctor.Id = reader.GetInt64(1);
+                a.TimeStart = reader.GetDateTime(2);
+                a.RoomNumber = reader.GetInt64(3);
+                a.State = (AppointmentState)reader.GetInt32(5);
+                a.ReasonForAppeal = reader.GetString(6);
+                a.Payment.Id = reader.IsDBNull(7) ? 0 : reader.GetInt64(7);
+                return a;
+            }
+            catch (MySQLException e)
+            {
+                throw new MySQLException(e.Message, e);
+
+            }
+        }
+
+
+
+       
+
     }
 }
+
 

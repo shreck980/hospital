@@ -28,5 +28,21 @@ namespace hospital.Services
                 throw new NoSuchRecord(e.Message, e);
             }
         }
+
+        public List<Symptom> GetAllSymptomsPerAppointment(long ehr)
+        {
+            try
+            {
+                return _symptomDAO.GetAllSymptomsPerAppointment(ehr);
+            }
+            catch (MySQLException e)
+            {
+                throw new MySQLException(e.Message, e);
+            }
+            catch (NoSuchRecord e)
+            {
+                throw new NoSuchRecord(e.Message, e);
+            }
+        }
     }
 }

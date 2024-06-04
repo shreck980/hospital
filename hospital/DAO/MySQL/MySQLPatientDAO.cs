@@ -3,6 +3,7 @@ using hospital.Exceptions;
 using MySqlConnector;
 using System.Data;
 
+
 namespace hospital.DAO.MySQL
 {
     public class MySQLPatientDAO : LastIdGetter, IPatientDAO
@@ -40,15 +41,9 @@ namespace hospital.DAO.MySQL
                     {
                         if (!reader.HasRows)
                         {
-                            throw new NoSuchRecord("Пацієгнти відстуні, будь ласка спробуйте пізніше");
+                            throw new NoSuchRecord("Пацієнти відстуні, будь ласка спробуйте пізніше");
                         }
-                        Patient p = new Patient();
-                        p.Name = (string)reader.GetValue(1);
-                        p.Surname = (string)reader.GetValue(2);
-                        p.Email = (string)reader.GetValue(3);
-                        p.Password = (string)reader.GetValue(4);
-                        p.Birthday = (DateTime)reader.GetValue(5);
-                        p.State = (AccountStates)reader.GetValue(7);
+                        Patient p = MapSmallerPatient(reader);
                         Console.WriteLine(p);
 
                     }
@@ -64,6 +59,49 @@ namespace hospital.DAO.MySQL
             }*/
 
         }
+
+        public Patient GetPatientByEmailUnverified(string email)
+        {
+
+            // using var connection = new MySqlConnection(config.Url);
+            Patient p = new Patient();
+            using (MySqlConnection connection = new MySqlConnection(config.Url))
+            {
+
+                using var command = new MySqlCommand("SELECT* FROM patient_account where email = @email and state = 1", connection);
+                try
+                {
+                    connection.Open();
+                    command.Parameters.AddWithValue("@email", email);
+                    using (var reader = command.ExecuteReader())
+                    {
+                        if (!reader.HasRows)
+                        {
+                            throw new NoSuchRecord("Акаунту з такою елеткронною адресою не існує");
+                        }
+                        while (reader.Read())
+                        {
+                           
+                           p=MapSmallerPatient(reader);
+                            Console.WriteLine(p);
+
+                        }
+                    }
+                   
+                }
+                catch (MySQLException e)
+                {
+                    throw new MySQLException(e.Message, e);
+                }
+
+            }
+            return p;
+
+
+
+
+        }
+
 
         public Patient GetPatientByEmail(string email)
         {
@@ -86,8 +124,8 @@ namespace hospital.DAO.MySQL
                         }
                         while (reader.Read())
                         {
-                           
-                            p.Id = (uint)reader.GetInt32(0);
+
+                            p.Id = reader.GetInt64(0);
                             p.Name = (string)reader.GetValue(1);
                             p.Surname = (string)reader.GetValue(2);
                             p.Email = (string)reader.GetValue(3);
@@ -98,7 +136,7 @@ namespace hospital.DAO.MySQL
 
                         }
                     }
-                   
+
                 }
                 catch (MySQLException e)
                 {
@@ -112,7 +150,7 @@ namespace hospital.DAO.MySQL
 
 
         }
-        public Patient GetPatientById(uint id)
+        public Patient GetPatientById(long id)
         {
             if (id == 0)
             {
@@ -136,15 +174,7 @@ namespace hospital.DAO.MySQL
                         }
                         while (reader.Read())
                         {
-                            p.Id = (uint)reader.GetInt32(0);
-                            p.Name = (string)reader.GetValue(1);
-                            p.Surname = (string)reader.GetValue(2);
-                            p.Email = (string)reader.GetValue(3);
-                            p.Password = (string)reader.GetValue(4);
-                            p.Birthday = (DateTime)reader.GetValue(5);
-                            p.State = (AccountStates)reader.GetValue(7);
-                            p.FamilyDoctor.Id = reader["family_doctor"] == DBNull.Value ? 0 : reader.GetUInt32(6);
-                            p.Address = reader.GetString(8);
+                            p = MapFullPatient(reader);
                             Console.WriteLine(p);
 
                         }
@@ -161,7 +191,7 @@ namespace hospital.DAO.MySQL
 
         }
 
-        public Patient GetPatientByIdSecure(uint id)
+        public Patient GetPatientByIdSecure(long id)
         {
             if (id == 0)
             {
@@ -185,14 +215,14 @@ namespace hospital.DAO.MySQL
                         }
                         while (reader.Read())
                         {
-                            p.Id = (uint)reader.GetInt32(0);
+                            p.Id = reader.GetInt64(0);
                             p.Name = (string)reader.GetValue(1);
                             p.Surname = (string)reader.GetValue(2);
                             p.Email = (string)reader.GetValue(3);
                            
                             p.Birthday = (DateTime)reader.GetValue(5);
                             p.State = (AccountStates)reader.GetValue(7);
-                            p.FamilyDoctor.Id = reader["family_doctor"] == DBNull.Value ? 0 : reader.GetUInt32(6);
+                            p.FamilyDoctor.Id = reader["family_doctor"] == DBNull.Value ? 0 : reader.GetInt64(6);
                             p.Address = reader.GetString(8);
                             Console.WriteLine(p);
 
@@ -209,7 +239,7 @@ namespace hospital.DAO.MySQL
 
 
         }
-        public Patient GetPatientMinDataById(uint id)
+        public Patient GetPatientMinDataById(long id)
         {
 
             // using var connection = new MySqlConnection(config.Url);
@@ -232,7 +262,7 @@ namespace hospital.DAO.MySQL
                         while (reader.Read())
                         {
                             
-                            p.Id = (uint)reader.GetInt32(0);
+                            p.Id = reader.GetInt64(0);
                             p.Name = (string)reader.GetValue(1);
                             p.Surname = (string)reader.GetValue(2);
                             p.State = (AccountStates)reader.GetValue(7);
@@ -256,9 +286,9 @@ namespace hospital.DAO.MySQL
 
         }
 
-        /*public uint GetLastPatientId(MySqlConnection connection, MySqlTransaction transaction)
+        /*public long GetLastPatientId(MySqlConnection connection, MySqlTransaction transaction)
         {
-            uint id = 1;
+            long id = 1;
             string query = "SELECT MAX(id) FROM patient_account";
             using (MySqlCommand command = new MySqlCommand(query, connection))
             {
@@ -266,7 +296,7 @@ namespace hospital.DAO.MySQL
                 var result = command.ExecuteScalar();
                 if (result != null && result != DBNull.Value)
                 {
-                    id = Convert.ToUInt32(result);
+                    id = Convert.ToInt64(result);
                 }
                 else
                 {
@@ -388,7 +418,7 @@ namespace hospital.DAO.MySQL
             }
         }
 
-        public void SetAccountState(AccountStates state)
+        public void SetAccountState(AccountStates state, long id)
         {
             using (MySqlConnection connection = new MySqlConnection(config.Url))
             {
@@ -402,6 +432,7 @@ namespace hospital.DAO.MySQL
                         {
                             command.Transaction = transaction;
                             command.Parameters.AddWithValue("@state", state);
+                            command.Parameters.AddWithValue("@id", id);
                           
 
                             command.ExecuteNonQuery();
@@ -418,6 +449,52 @@ namespace hospital.DAO.MySQL
                 }
             }
         }
+        public Patient MapFullPatient(MySqlDataReader reader)
+        {
+            try
+            {
+                Patient p = new Patient();
+                p.Id = reader.GetInt64(0);
+                p.Name = (string)reader.GetValue(1);
+                p.Surname = (string)reader.GetValue(2);
+                p.Email = (string)reader.GetValue(3);
+                p.Password = (string)reader.GetValue(4);
+                p.Birthday = (DateTime)reader.GetValue(5);
+                p.State = (AccountStates)reader.GetValue(7);
+                p.FamilyDoctor.Id = reader["family_doctor"] == DBNull.Value ? 0 : reader.GetInt64(6);
+                p.Address = reader.GetString(8);
+                return p;
+            }
+            catch (MySQLException e)
+            {
+               
+                throw new MySQLException(e.Message, e);
+            }
+        }
+
+
+        public Patient MapSmallerPatient(MySqlDataReader reader)
+        {
+            try
+            {
+                Patient p = new Patient();
+                p.Id = reader.GetInt64(0);
+                p.Name = (string)reader.GetValue(1);
+                p.Surname = (string)reader.GetValue(2);
+                p.Email = (string)reader.GetValue(3);
+                p.Password = (string)reader.GetValue(4);
+                p.Birthday = (DateTime)reader.GetValue(5);
+                p.State = (AccountStates)reader.GetValue(7);
+
+                return p;
+            }
+            catch (MySQLException e)
+            {
+
+                throw new MySQLException(e.Message, e);
+            }
+        }
+
 
 
     }

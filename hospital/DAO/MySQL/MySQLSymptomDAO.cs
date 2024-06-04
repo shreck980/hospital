@@ -11,6 +11,7 @@ namespace hospital.DAO.MySQL
 
         private const string InsertSymptom = "INSERT INTO symptom (id, name, description) VALUES (@id, @name, @description); ";
         private const string getAllSymptoms = "select*from symptom; ";
+      
         public MySQLSymptomDAO(DAOConfig dAOConfig)
         {
             config = dAOConfig;
@@ -75,7 +76,7 @@ namespace hospital.DAO.MySQL
                         while (reader.Read())
                         {
                             Symptom s = new Symptom();
-                            s.Id = reader.GetUInt32(0);
+                            s.Id = reader.GetInt64(0);
                             s.Name = reader.GetString(1);
                             sList.Add(s);
                         }
@@ -84,6 +85,60 @@ namespace hospital.DAO.MySQL
 
                     }
                     return sList;
+
+                }
+                catch (MySQLException e)
+                {
+                    throw new MySQLException(e.Message, e);
+
+                }
+            }
+        }
+
+
+        public List<Symptom> GetAllSymptomsPerAppointment(long ehr)
+        {
+            List<Symptom> symptoms = new List<Symptom>();
+
+            using (MySqlConnection connection = new MySqlConnection(config.Url))
+            {
+                try
+                {
+                    connection.Open();
+                   
+
+
+                        using (var command = new MySqlCommand("Select e_s.*, s.* from ehr_symptom e_s JOIN symptom s ON e_s.symptom = s.id where ehr_record =@id;", connection))
+                        {
+                            command.Parameters.Clear();
+                            command.Parameters.AddWithValue("@id", ehr);
+
+                            using (var reader = command.ExecuteReader())
+                            {
+
+                                if (reader.HasRows)
+                                {
+
+
+
+                                    while (reader.Read())
+                                    {
+                                        Symptom s = new Symptom();
+                                        s.Id = reader.GetInt64(0);
+                                        s.Description = reader.GetString(4);
+                                        s.Name = reader.GetString(3);
+                                       
+                                        symptoms.Add(s);
+
+                                    }
+
+                                }
+                            }
+                        }
+
+
+                    
+                    return symptoms;
 
                 }
                 catch (MySQLException e)

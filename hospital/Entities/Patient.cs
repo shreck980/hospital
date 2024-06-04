@@ -11,14 +11,17 @@ namespace hospital.Entities
  
     public class Patient : Account
     {
-       
-        
+
+        [Display(Name = "Ім'я")]
         public string Name { get; set; }
         [Required(ErrorMessage = "Surname is required")]
+        [Display(Name = "Прізвище")]
         public string Surname { get; set; }
 
         [Required(ErrorMessage = "Birthday is required")]
         [DataType(DataType.Date)]
+        [Display(Name = "День народження")]
+      
         public DateTime Birthday { get; set; }
         [ValidateNever]
         public AccountStates State { get; set; }
@@ -27,10 +30,11 @@ namespace hospital.Entities
         [ValidateNever]
         public MedicalCard MedicalCard { get; set; }
         [Required(ErrorMessage = "Address is required")]
+        [Display(Name = "Адреса")]
         public string Address { get; set; }
       
 
-        public Patient(uint id, string name, string surname, string email, string password, DateTime birthday, AccountStates state, Doctor familyDoctor, MedicalCard medicalCard, string address)
+        public Patient(long id, string name, string surname, string email, string password, DateTime birthday, AccountStates state, Doctor familyDoctor, MedicalCard medicalCard, string address)
             :base(id,email,password)
         {
             

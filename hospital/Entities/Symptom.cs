@@ -2,12 +2,12 @@
 {
     public class Symptom
     {
-        public uint Id { get; set; }
+        public long Id { get; set; }
         public string Name { get; set; }
         public bool IsSelected { get; set; }
         public string Description { get; set; }
      
-        public Symptom(uint id, string name, string description)
+        public Symptom(long id, string name, string description)
         {
             Id = id;
             Name = name;

@@ -6,8 +6,10 @@ using hospital.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
+using System;
 using System.Numerics;
 using System.Reflection;
+using Enums.Services;
 
 namespace hospital.Controllers
 {
@@ -36,18 +38,6 @@ namespace hospital.Controllers
 
         public IActionResult ChooseFamilyDoctor()
         {
-            if (HttpContext.Session.GetInt32("patientId") is null)
-            {
-                TempData["ErrorMessage"] = "Час вашої сесії вичерпався, будь ласка зайдіть знову";
-                return RedirectToAction("Login", "PatientAccount");
-            }
-
-
-            /*if (HttpContext.Session.GetInt32("isLogged") == 0)
-            {
-                TempData["ErrorMessage"] = "Для того щоб мати доступ до цієї функції треба бути авторизованим. Будь ласка авторизуйтесь";
-                return RedirectToAction("Error", "Error");
-            }*/
 
             try
             {
@@ -75,32 +65,24 @@ namespace hospital.Controllers
             if (HttpContext.Session.GetInt32("patientId") is null)
             {
                 TempData["ErrorMessage"] = "Час вашої сесії вичерпався, будь ласка зайдіть знову";
-                return RedirectToAction("Login", "PatientAccount");
+                return RedirectToAction("LogOut", "PatientAccount");
             }
-
-
-            /*if (HttpContext.Session.GetInt32("isLogged") == 0)
-            {
-                TempData["ErrorMessage"] = "Для того щоб мати доступ до цієї функції треба бути авторизованим. Будь ласка авторизуйтесь";
-                return RedirectToAction("Error", "Error");
-            }*/
 
             try
             {
                 List<Doctor> doctors = _doctorService.GetAllDoctorsForPatient();
                 int patientId = HttpContext.Session.GetInt32("patientId") ?? 0;
                
-                uint family_doctor_id = _patientService
-                    .GetPatientByID((uint)patientId)
+                long family_doctor_id = _patientService
+                    .GetPatientByID((long)patientId)
                     .FamilyDoctor.Id;
                 doctors.Add(_doctorService.GetDoctorsById(family_doctor_id));
 
                 ViewBag.Doctors = doctors.Select(d => new
                 {
                     Id = d.Id,
-                    FullName = d.Name + " " + d.Surname+" - "+ _doctorService.GetSpeciality(d.Speciality)
-                }).ToList();
-                ;
+                    FullName = d.Name + " " + d.Surname + " - " + d.Speciality.GetDescription()
+                });
 
 
             }
@@ -116,12 +98,7 @@ namespace hospital.Controllers
         [HttpPost]
         public IActionResult BookFirstAppointmentSchedule(BookAppointment model, int? doctorId)
         {
-            if (HttpContext.Session.GetInt32("patientId") is null)
-            {
-                TempData["ErrorMessage"] = "Час вашої сесії вичерпався, будь ласка зайдіть знову";
-                return RedirectToAction("Login", "PatientAccount");
-            }
-
+            
             if (model.Doctor.Id == 0)
             {
 
@@ -134,7 +111,7 @@ namespace hospital.Controllers
             {
                 if (doctorId.HasValue)
                 {
-                    model.Doctor.Id = (uint)doctorId.Value;
+                    model.Doctor.Id = (long)doctorId.Value;
                 }
 
                 if (!_scheduleService.RetrieveScheduleForPatientView(model))
@@ -162,22 +139,18 @@ namespace hospital.Controllers
 
         }
 
-        [HttpGet("[controller]/[action]/{doctorId:int}")]
-        public IActionResult BookAppointmentSchedule(int doctorId)
+        [HttpGet("[controller]/[action]/{doctorId:long}")]
+        [HttpGet("[controller]/[action]/{doctorId:long}/{referralId:int}")]
+        public IActionResult BookAppointmentSchedule(long doctorId,long? referralId)
         {
-            if (HttpContext.Session.GetInt32("patientId") is null)
-            {
-                TempData["ErrorMessage"] = "Час вашої сесії вичерпався, будь ласка зайдіть знову";
-                return RedirectToAction("Login", "PatientAccount");
-            }
-
            
-
             try
             {
                 BookAppointment model = new BookAppointment();
-                model.Doctor.Id = (uint)doctorId;
-
+                model.Doctor.Id = doctorId;
+                if (referralId.HasValue){
+                    model.ReferralId = referralId.Value;
+                }
                 if (!_scheduleService.RetrieveScheduleForPatientView(model))
                 {
                     model.Doctor.Id = 0;
@@ -206,11 +179,7 @@ namespace hospital.Controllers
         [HttpPost]
         public IActionResult BookAppointmentSchedule(BookAppointment model)
         {
-            if (HttpContext.Session.GetInt32("patientId") is null)
-            {
-                TempData["ErrorMessage"] = "Час вашої сесії вичерпався, будь ласка зайдіть знову";
-                return RedirectToAction("Login", "PatientAccount");
-            }
+           
 
             if (model.Doctor.Id == 0)
             {
@@ -292,16 +261,16 @@ namespace hospital.Controllers
         public IActionResult PersonalProfile()
         {
 
-            if (HttpContext.Session.GetInt32("doctorId") is null)
+            if (HttpContext.Session.GetInt32("doctorId") == null)
             {
                 TempData["ErrorMessage"] = "Час вашої сесії вичерпався, будь ласка зайдіть знову";
-                return RedirectToAction("Login", "Doctor");
+                return RedirectToAction("LogOut", "Doctor");
             }
-            uint id = HttpContext.Session.GetInt32("doctorId").HasValue ? (uint)HttpContext.Session.GetInt32("doctorId") : 0;
+            long id = HttpContext.Session.GetInt32("doctorId").HasValue ? (long)HttpContext.Session.GetInt32("doctorId") : 0;
             try
             {
                 Doctor doctor = _doctorService.GetDoctorsById(id);
-                doctor.Schedule = _scheduleService.RetrieveScheduleForDoctorView(id);
+                doctor.Schedule = _scheduleService.RetrieveScheduleForDoctorView(id).OrderBy(e => e.Start).ToList();
                 if (doctor.Schedule.Count == 0)
                 {
                     ModelState.AddModelError("no_schedule", "У вас поки нема записаних прийомів");
@@ -313,6 +282,7 @@ namespace hospital.Controllers
                     e.Appointment.Patient = _patientService.GetPatientMinById(e.Appointment.Patient.Id);
 
                 }
+                
                 return View(doctor);
             }
             catch (MySQLException e)
@@ -332,7 +302,7 @@ namespace hospital.Controllers
         [HttpGet("[controller]/[action]/{id}")]
         public IActionResult BecomeFamilyDoctor(string id)
         {
-            uint userId = uint.Parse(id);
+            long userId = long.Parse(id);
             Patient p = _patientService.GetPatientMinById(userId);
             return View(p);
             
@@ -344,14 +314,14 @@ namespace hospital.Controllers
             if (HttpContext.Session.GetInt32("doctorId") is null)
             {
                 TempData["ErrorMessage"] = "Час вашої сесії вичерпався, будь ласка зайдіть знову";
-                return RedirectToAction("Login", "Doctor");
+                return RedirectToAction("LogOut", "Doctor");
             }
             try
             {
                 if (form["familyDoctor"] == "on")
                 {
 
-                    p.FamilyDoctor.Id = HttpContext.Session.GetInt32("doctorId").HasValue ? (uint)HttpContext.Session.GetInt32("doctorId") : 0;
+                    p.FamilyDoctor.Id = HttpContext.Session.GetInt32("doctorId").HasValue ? (long)HttpContext.Session.GetInt32("doctorId") : 0;
                     p.State = AccountStates.Active;
                     _patientService.SetFamilyDoctor(p);
                 }

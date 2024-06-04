@@ -15,17 +15,16 @@
         @Html.ValidationSummary(true)
 
         @Html.DropDownListFor(m => m.ScheduleId, new List<SelectListItem>(@Model.Schedule), "Оберіть години для прийому", new { @class = "form-control" })
-        <br />
+       
         @Html.ValidationMessageFor(m => m.ScheduleId, "", new { @class = "text-danger" })
-        <br />
+        
 
         <label for="reasonForAppeal">Причина звернення:</label>
-        <br />
+       
         @Html.TextAreaFor(m => m.ReasonForAppeal, new { rows = 4, cols = 40 })
-        <br />
-
+        
         @Html.ValidationMessageFor(m => m.ReasonForAppeal,"", new { @class = "text-danger" })
-        <br />
+      
     
         @Html.HiddenFor(m => m.Doctor.Id) 
         @Html.HiddenFor(m => m.Doctor.Email) 

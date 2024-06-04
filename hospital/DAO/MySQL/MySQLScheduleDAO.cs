@@ -16,7 +16,7 @@ namespace hospital.DAO.MySQL
             GetLastID = "SELECT MAX(id) FROM schedule";
         }
 
-        public void AddSchedule(List<Event> schedule, uint doctor)
+        public void AddSchedule(List<Event> schedule, long doctor)
         {
             using (MySqlConnection connection = new MySqlConnection(config.Url))
             {
@@ -56,7 +56,7 @@ namespace hospital.DAO.MySQL
             }
         }
 
-        public List<Event> GetScheduleByDoctorIdForPatient(uint doctor)
+        public List<Event> GetScheduleByDoctorIdForPatient(long doctor)
         {
             List<Event> schedule = new List<Event>();
             try
@@ -74,7 +74,7 @@ namespace hospital.DAO.MySQL
                             while (reader.Read())
                             {
                                 Event e = new Event();
-                                e.Id = reader.GetUInt32(0);
+                                e.Id = reader.GetInt64(0);
                                 e.Start = reader.GetDateTime(1);
                                 e.End = reader.GetDateTime(2);
                                 schedule.Add(e);
@@ -95,7 +95,7 @@ namespace hospital.DAO.MySQL
         }
 
 
-        public List<Event> GetScheduleByDoctorIdForDoctor(uint doctor)
+        public List<Event> GetScheduleByDoctorIdForDoctor(long doctor)
         {
             List<Event> schedule = new List<Event>();
             try
@@ -103,7 +103,7 @@ namespace hospital.DAO.MySQL
                 using (MySqlConnection connection = new MySqlConnection(config.Url))
                 {
 
-                    using (var command = new MySqlCommand("SELECT * FROM schedule WHERE doctor = @doctor_id AND appointment IS NOT NULL AND appointment IN (SELECT id FROM appointment WHERE state in (1,2));", connection))
+                    using (var command = new MySqlCommand("SELECT * FROM schedule WHERE doctor = @doctor_id AND appointment IS NOT NULL AND appointment IN (SELECT id FROM appointment WHERE state in (1,2) or state=5);", connection))
                     {
                         connection.Open();
                         command.Parameters.Clear();
@@ -117,11 +117,11 @@ namespace hospital.DAO.MySQL
                             while (reader.Read())
                             {
                                 Event e = new Event();
-                                e.Id = reader.GetUInt32(0);
+                                e.Id = reader.GetInt64(0);
                                 e.Start = reader.GetDateTime(1);
                                 e.End = reader.GetDateTime(2);
                                 e.Appointment = new Appointment();
-                                e.Appointment.Id = reader.GetUInt32(4);
+                                e.Appointment.Id = reader.GetInt64(4);
                                 schedule.Add(e);
 
                             }
@@ -141,7 +141,7 @@ namespace hospital.DAO.MySQL
         }
 
 
-        public Event GetEvenById(uint id)
+        public Event GetEvenById(long id)
         {
             Event ev = new Event();
             if (id == 0)
@@ -163,7 +163,7 @@ namespace hospital.DAO.MySQL
                             while (reader.Read())
                             {
 
-                                ev.Id = reader.GetUInt32(0);
+                                ev.Id = reader.GetInt64(0);
                                 ev.Start = reader.GetDateTime(1);
 
 
@@ -182,7 +182,7 @@ namespace hospital.DAO.MySQL
             return ev;
         }
 
-        public void MarkEventAsBooked(uint eventId, uint appointmentId)
+        public void MarkEventAsBooked(long eventId, long appointmentId)
         {
             if (appointmentId == 0)
             {

@@ -4,7 +4,7 @@ namespace hospital.Entities
 {
     public class Payment
     {
-        public uint Id {  get; set; }
+        public long Id {  get; set; }
         public decimal Price { get; set; }
         public DateTime DateIssued { get; set; } = DateTime.Now;
         public DateTime? DatePaid { get; set; }
@@ -16,7 +16,7 @@ namespace hospital.Entities
             Price = 0;
             Id = 0;
         }
-        public Payment(uint id, decimal price, DateTime dateIssued, DateTime datePaid, Patient patient)
+        public Payment(long id, decimal price, DateTime dateIssued, DateTime datePaid, Patient patient)
         {
             Id = id;
             Price = price;
@@ -25,7 +25,7 @@ namespace hospital.Entities
             Patient = patient;
         }
 
-        public Payment(uint id, decimal price,  DateTime dateIssued, Patient patient)
+        public Payment(long id, decimal price,  DateTime dateIssued, Patient patient)
         {
             Id = id;
             Price = price;

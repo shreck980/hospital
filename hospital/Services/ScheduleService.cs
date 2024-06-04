@@ -45,7 +45,7 @@ namespace hospital.Services
 
         }
 
-        public List<Event> RetrieveScheduleForDoctorView(uint doctorId)
+        public List<Event> RetrieveScheduleForDoctorView(long doctorId)
         {
             try
             {

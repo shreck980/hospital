@@ -11,7 +11,7 @@ namespace hospital.DAO.MySQL
         // private static string url =
         private const string InsertMedicalCard = "INSERT INTO medical_card (id, patient) VALUES (@id,@patient)";
 
-        private const string InsertReferral = "INSERT INTO referral (id, doctor, expiration_date) VALUE (@id, @doctor, @expiration_date); ";
+        private const string InsertReferral = "INSERT INTO referral (id, doctor, expiration_date,state) VALUE (@id, @doctor, @expiration_date, @state); ";
 
         private const string InsertEHR = "INSERT INTO ehr (id, appointment, result_of_examination) VALUES (@id, @appointment, @result_of_examination)";
         private const string InsertEMR = "INSERT INTO emr (referral, appointment, id) VALUES (@referral, @appointment, @id)";
@@ -34,7 +34,7 @@ namespace hospital.DAO.MySQL
             GetLastID = "SELECT MAX(id) FROM medical_card";
         }
 
-        public void AddMedicalCard(uint patientId)
+        public void AddMedicalCard(long patientId)
         {
 
             MedicalCard m = new MedicalCard();
@@ -131,6 +131,8 @@ namespace hospital.DAO.MySQL
                                 command.Parameters.AddWithValue("@id", lastEMR.Referral.Id);
                                 command.Parameters.AddWithValue("@doctor", lastEMR.Referral.Doctor.Id);
                                 command.Parameters.AddWithValue("@expiration_date", lastEMR.Referral.ExpirationDate);
+                                command.Parameters.AddWithValue("@state", lastEMR.Referral.State);
+                               
                                 command.ExecuteNonQuery();
 
                             }
@@ -177,7 +179,7 @@ namespace hospital.DAO.MySQL
             }
         }
 
-        public MedicalCard GetMedicalCardEmpty(uint patientId)
+        public MedicalCard GetMedicalCardEmpty(long patientId)
         {
             MedicalCard m = new MedicalCard();
             using (MySqlConnection connection = new MySqlConnection(config.Url))
@@ -202,7 +204,7 @@ namespace hospital.DAO.MySQL
                             while (reader.Read())
                             {
 
-                                m.Id = reader.GetUInt32(0);
+                                m.Id = reader.GetInt64(0);
 
 
 
@@ -226,7 +228,129 @@ namespace hospital.DAO.MySQL
 
         }
 
-        public (EMR, EHR) GetAppointmentDetailsPatient(uint appointment)
+
+        public void DeleteReferral(long id)
+        {
+            using (MySqlConnection connection = new MySqlConnection(config.Url))
+            {
+                connection.Open();
+
+                using (var transaction = connection.BeginTransaction(System.Data.IsolationLevel.RepeatableRead))
+                {
+                    try
+                    {
+                       
+                        using (MySqlCommand cmd = new MySqlCommand("DELETE FROM referral WHERE id = @id", connection, transaction))
+                        {
+
+                            cmd.Parameters.AddWithValue("@id", id);
+
+
+                            cmd.ExecuteNonQuery();
+                        }
+
+                        transaction.Commit();
+                    }
+                    catch (MySQLException e)
+                    {
+                        transaction.Rollback();
+                        throw new MySQLException("Помилка при видаленні направлення", e);
+                    }
+                }
+            }
+        }
+
+        public void UpdateReferralState(long id, int state, long? appointment)
+        {
+            string query="";
+            if (state == 2&&appointment.HasValue)
+            {
+                 query= "Update referral set state = @state, appointment =@appointment where id = @id";
+            }
+            else
+            {
+                query = "Update referral set state =@state where id=@id";
+            }
+            using (MySqlConnection connection = new MySqlConnection(config.Url))
+            {
+                connection.Open();
+
+                using (var transaction = connection.BeginTransaction(System.Data.IsolationLevel.RepeatableRead))
+                {
+                    try
+                    {
+
+                        using (MySqlCommand cmd = new MySqlCommand(query, connection, transaction))
+                        {
+
+                            cmd.Parameters.AddWithValue("@id", id);
+                            cmd.Parameters.AddWithValue("@state", state);
+                            if(state== 2&&appointment.HasValue )
+                            {
+                                cmd.Parameters.AddWithValue("@appointment", appointment.Value);
+                            }
+
+                            cmd.ExecuteNonQuery();
+                        }
+
+                        transaction.Commit();
+                    }
+                    catch (MySQLException e)
+                    {
+                        transaction.Rollback();
+                        throw new MySQLException("Помилка при видаленні направлення", e);
+                    }
+                }
+            }
+        }
+
+
+        public long GetReferralIdByAppointmentId(long id)
+        {
+            long rId = 0;
+            using (MySqlConnection connection = new MySqlConnection(config.Url))
+            {
+                connection.Open();
+
+                try
+                {
+
+                    using (var command = new MySqlCommand("select*from referral where appointment=@id;", connection))
+                    {
+
+
+                        command.Parameters.AddWithValue("@id", id);
+                        using (var reader = command.ExecuteReader())
+                        {
+                            if (!reader.HasRows)
+                            {
+                                throw new NoSuchRecord();
+
+                            }
+                            while (reader.Read())
+                            {
+
+                                rId = reader.GetInt64(0);
+
+
+
+                            }
+                        }
+                    }
+
+                    return rId;
+                   
+                }
+                catch (MySQLException e)
+                {
+
+                    throw new MySQLException(e.Message, e);
+                }
+
+            }
+        }
+
+        public (EMR, EHR) GetAppointmentDetailsPatient(long appointment)
         {
             using (MySqlConnection connection = new MySqlConnection(config.Url))
             {
@@ -252,8 +376,8 @@ namespace hospital.DAO.MySQL
                             while (reader.Read())
                             {
 
-                                e.Id = reader.GetUInt32(0);
-                                e.ResultOfExamination = reader.GetString(1);
+                                e.Id = reader.GetInt64(0);
+                                e.ResultOfExamination = reader.IsDBNull(1)?"Не зазначено" : reader.GetString(1);
 
                             }
                         }
@@ -265,7 +389,7 @@ namespace hospital.DAO.MySQL
 
                         using (var reader = command.ExecuteReader())
                         {
-                            Drug d = new Drug();
+                           
                             if (reader.HasRows)
                             {
 
@@ -273,15 +397,15 @@ namespace hospital.DAO.MySQL
 
                                 while (reader.Read())
                                 {
-
-                                    d.Id = reader.GetUInt32(0);
+                                    Drug d = new Drug();
+                                    d.Id = reader.GetInt64(0);
                                     d.ExpirationDate = reader.GetDateTime(2);
                                     d.Name = reader.GetString(4);
                                     d.Instruction = reader.GetString(5);
-
+                                    e.Drugs.Add(d);
 
                                 }
-                                e.Drugs.Add(d);
+                               
                             }
                         }
                     }
@@ -289,7 +413,7 @@ namespace hospital.DAO.MySQL
 
                    
 
-                    using (var command = new MySqlCommand("select e.*, r.id as referral_id,r.doctor,r.expiration_date,d.Name,d.Surname from emr e join referral r on e.referral = r.id join doctor_account d on r.doctor=d.id where appointment = @appointment", connection))
+                    using (var command = new MySqlCommand("select e.*, r.id as referral_id,r.doctor,r.expiration_date,d.Name,d.Surname,d.speciality,r.state,r.appointment as r_appointment from emr e join referral r on e.referral = r.id join doctor_account d on r.doctor=d.id where e.appointment = @appointment", connection))
                     {
                         command.Parameters.Clear();
                         command.Parameters.AddWithValue("@appointment", appointment);
@@ -305,12 +429,15 @@ namespace hospital.DAO.MySQL
                                 while (reader.Read())
                                 {
 
-                                    e_m.Id = reader.GetUInt32(0);
-                                    e_m.Referral.Id = reader.GetUInt32(1);
-                                    e_m.Referral.Doctor.Id = reader.GetUInt32(3);
+                                    e_m.Id = reader.GetInt64(0);
+                                    e_m.Referral.Id = reader.GetInt64(1);
+                                    e_m.Referral.Doctor.Id = reader.GetInt64(4);
                                     e_m.Referral.Doctor.Name = reader.GetString(6);
                                     e_m.Referral.Doctor.Surname = reader.GetString(7);
+                                    e_m.Referral.Doctor.Speciality =(Speciality) reader.GetInt16(8);
                                     e_m.Referral.ExpirationDate = reader.GetDateTime(5);
+                                    e_m.Referral.State = (ReferralState)reader.GetInt32(9);
+                                    e_m.Referral.AppointmetnId = reader.IsDBNull(9)?0: reader.GetInt64(9);
 
 
                                 }
@@ -331,7 +458,7 @@ namespace hospital.DAO.MySQL
         }
     
 
-            public MedicalCard GetMedicalCardPatient(uint patientId)
+            public MedicalCard GetMedicalCardPatient(long patientId)
             {
                MedicalCard m = new MedicalCard();
                using (MySqlConnection connection = new MySqlConnection(config.Url))
@@ -355,7 +482,7 @@ namespace hospital.DAO.MySQL
                             while (reader.Read())
                             {
 
-                                m.Id = reader.GetUInt32(0);
+                                m.Id = reader.GetInt64(0);
 
 
 
@@ -377,18 +504,18 @@ namespace hospital.DAO.MySQL
                         while (reader.Read())
                         {
                             Appointment a = new Appointment();
-                            a.Id = reader.GetUInt32(4);
-                            a.Patient.Id = reader.GetUInt32(0);
-                            a.Doctor.Id = reader.GetUInt32(1);
+                            a.Id = reader.GetInt64(4);
+                            a.Patient.Id = reader.GetInt64(0);
+                            a.Doctor.Id = reader.GetInt64(1);
                             a.Doctor.Name = reader.GetString(8);
                             a.Doctor.Surname = reader.GetString(9);
                             a.TimeStart = reader.GetDateTime(2);
-                            a.RoomNumber = reader.GetUInt32(3);
+                            a.RoomNumber = reader.GetInt64(3);
                             a.State = (AppointmentState)reader.GetInt32(5);
                             a.ReasonForAppeal = reader.GetString(6);
-                            a.Payment.Id = reader.IsDBNull(7) ? 0 : reader.GetUInt32(7);
+                            a.Payment.Id = reader.IsDBNull(7) ? 0 : reader.GetInt64(7);
 
-                            //a.Payment.Id = reader.GetUInt32(7);
+                            //a.Payment.Id = reader.GetInt64(7);
                             appointments.Add(a);
                         }
 
@@ -414,7 +541,7 @@ namespace hospital.DAO.MySQL
                                 while (reader.Read())
                                 {
 
-                                   e.Id = reader.GetUInt32(0);
+                                   e.Id = reader.GetInt64(0);
                                    e.ResultOfExamination = reader.GetString(1);
 
                                 }
@@ -436,7 +563,7 @@ namespace hospital.DAO.MySQL
                                     while (reader.Read())
                                     {
 
-                                        d.Id = reader.GetUInt32(0);
+                                        d.Id = reader.GetInt64(0);
                                         d.ExpirationDate = reader.GetDateTime(2);
                                         d.Name = reader.GetString(4);
                                         d.Instruction = reader.GetString(5);
@@ -467,9 +594,9 @@ namespace hospital.DAO.MySQL
                                     while (reader.Read())
                                     {
 
-                                        e_m.Id = reader.GetUInt32(0);
-                                        e_m.Referral.Id = reader.GetUInt32(1);
-                                        e_m.Referral.Doctor.Id = reader.GetUInt32(3);
+                                        e_m.Id = reader.GetInt64(0);
+                                        e_m.Referral.Id = reader.GetInt64(1);
+                                        e_m.Referral.Doctor.Id = reader.GetInt64(3);
                                         e_m.Referral.Doctor.Name = reader.GetString(6);
                                         e_m.Referral.Doctor.Surname = reader.GetString(7);
                                         e_m.Referral.ExpirationDate = reader.GetDateTime(5);

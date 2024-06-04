@@ -1,6 +1,7 @@
 ﻿using hospital.DAO;
 using hospital.Exceptions;
 using hospital.Entities;
+using System.Linq.Expressions;
 
 
 namespace hospital.Services
@@ -8,21 +9,32 @@ namespace hospital.Services
     public class DoctorService
     {
         IDoctorDAO _doctorDAO;
-        IScheduleDAO _scheduleDAO;
+       // IScheduleDAO _scheduleDAO;
 
-        public DoctorService(IDoctorDAO doctorDAO, IScheduleDAO scheduleDAO)
+        public DoctorService(IDoctorDAO doctorDAO) //IScheduleDAO scheduleDAO)
         {
 
             _doctorDAO = doctorDAO;
-            _scheduleDAO = scheduleDAO;
+            //_scheduleDAO = scheduleDAO;
         }
 
-       public List<Doctor> GetDoctorsBySpeciality(Speciality speciality)
-       {
-            return _doctorDAO.GetDoctorsBySpeciality(speciality);
-       }
-        public Doctor GetDoctorsByEmail(string email)
+        public List<Doctor> GetDoctorsBySpeciality(Speciality speciality)
         {
+            try
+            {
+                return _doctorDAO.GetDoctorsBySpeciality(speciality);
+            }
+            catch (MySQLException e)
+            {
+                throw new MySQLException(e.Message, e);
+            }
+            catch (NoSuchRecord e)
+            {
+                throw new NoSuchRecord(e.Message, e);
+            }
+        }
+            public Doctor GetDoctorsByEmail(string email)
+            {
             try
             {
                 Doctor d = _doctorDAO.GetDoctorByEmail(email);
@@ -39,7 +51,7 @@ namespace hospital.Services
 
         }
 
-        public Doctor GetDoctorsById(uint id)
+        public Doctor GetDoctorsById(long id)
         {
             try
             {
@@ -56,7 +68,7 @@ namespace hospital.Services
             }
 
         }
-        public Doctor GetDoctorsByIdMin(uint id)
+        public Doctor GetDoctorsByIdMin(long id)
         {
             try
             {

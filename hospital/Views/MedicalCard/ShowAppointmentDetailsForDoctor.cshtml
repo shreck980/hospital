@@ -1,0 +1,119 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+
+@using Enums.Services;
+
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>@ViewBag.Title</title>
+
+</head>
+<body>
+    @model hospital.Entities.MedicalCard
+    @{
+        var r = Model.AppointmentRecord.First();
+    }
+    @Html.ActionLink("<Назад", "OpenAppointmentHistoryForPatient", "MedicalCard", new
+        {
+            patientId = r.Key.Patient.Id
+        }, new { @class = "go-back-link" })
+    <div class="history_area">
+        <div class="header">
+            <h3>Прийом у лікаря @r.Key.Doctor.Name @r.Key.Doctor.Surname</h3>
+        </div>
+        <div class="app_info">
+            <div>
+                <p><strong>Статус:</strong> @r.Key.State</p>
+                <p><strong>Дата:</strong> @r.Key.TimeStart.DayOfWeek, @r.Key.TimeStart.ToShortDateString()</p>
+                <p><strong>Час:</strong> @r.Key.TimeStart.ToShortTimeString()</p>
+                <p><strong>Номер кабінету:</strong> @r.Key.RoomNumber</p>
+            </div>
+            <div>
+                <p><strong>Пацієнт:</strong> @r.Key.Patient.Name @r.Key.Patient.Surname</p>
+                <p><strong>Вік:</strong> @DateTime.UtcNow.Year - @r.Key.Patient.Birthday.Year</p>
+                <p><strong>Причина звернення:</strong> @r.Key.ReasonForAppeal</p>
+                <p><strong>Результати остеження:</strong> @r.Value.Item2.ResultOfExamination</p>
+            </div>
+        </div>
+        <hr />
+        <div class="app_result">
+            <div class="result_cont">
+                <h3>Рецепт</h3>
+                @if (@r.Value.Item2 is null)
+                {
+                    <p class="danger">Помилка при пошуку деталей прийому, будь ласка спробуйте пізніше</p>
+                }
+                else if (@r.Value.Item2.Drugs.Count > 0)
+                {
+                    <div class="drug-list">
+                        @foreach (var drug in @r.Value.Item2.Drugs)
+                        {
+                            <div class="drug-item">
+                                <p><strong>Назва:</strong> @drug.Name</p>
+                                <p><strong>Дата закінчення терміну дії рецепту:</strong> @drug.ExpirationDate.ToShortDateString()</p>
+                                <p><strong>Інструкція:</strong> @drug.Instruction</p>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <p>No drugs available.</p>
+                }
+            </div>
+
+            <div class="result_cont">
+                <h3>Симптоми</h3>
+                @if (@r.Value.Item2 is null)
+                {
+                    <p class="danger">Помилка при пошуку деталей прийому, будь ласка спробуйте пізніше</p>
+                }
+                else if (@r.Value.Item2.Symptoms.Count > 0)
+                {
+                    <div class="drug-list">
+                        @foreach (var s in @r.Value.Item2.Symptoms)
+                        {
+                            <div class="drug-item">
+                                <p><strong>Назва:</strong> @s.Name</p>
+                                <p><strong>Опис:</strong> @s.Description</p>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <p>Лікар не виписав жодних ліків</p>
+                }
+            </div>
+            <div class="result_cont" style="justify-content:center; text-align: center;">
+                <h3>Направлення</h3>
+                <div style="display:flex; flex-direction:column; justify-content:center; text-align: center;">
+                @if(r.Value.Item1.Referral.Id == 0)
+                {
+                    <p>У Вас нема направлення з цього прийому</p>
+                }
+                else{
+                        <div style="display: flex; flex-direction: row; justify-content:center; text-align: center;">
+                            <div style="display: flex; flex-direction: column; align-items: flex-start;">
+                                <p><strong>Лікар: </strong>@r.Value.Item1.Referral.Doctor.Name @r.Value.Item1.Referral.Doctor.Surname</p>
+                                <p><strong>Спеціальність: </strong>@r.Value.Item1.Referral.Doctor.Speciality.GetDescription()</p>
+                            </div>
+                            <div style="display: flex; flex-direction: column; align-items: center; margin-left:20px;">
+                                <p><strong>Дійсне до: </strong>@r.Value.Item1.Referral.ExpirationDate.ToShortDateString()</p>
+                            </div>
+                        </div>
+
+                }
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</body>
+</html>
